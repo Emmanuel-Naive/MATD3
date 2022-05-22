@@ -28,6 +28,18 @@ def get_data(scenario_name):
     scenario = Scen.load(scenario_name + ".py")
     return scenario
 
+
+def delete_files(dir_path):
+    """
+    delete all files in the given folder
+    :param dir_path: the path of the given folder
+    :return:
+    """
+    for root, dirs, files in os.walk(dir_path, topdown=False):
+        for name in files:
+            os.remove(os.path.join(root, name))  # delete files
+
+
 def wrap_to_pi(angle):
     """
     wraps the angle to [-pi,pi)
@@ -108,19 +120,19 @@ def true_bearing(x_os, y_os, x_cn, y_cn):
     :param y_os:
     :param x_cn:
     :param y_cn:
-    :return:
+    :return: true bearing (result in degrees)
     """
     # result in radians between -pi and pi
-    bearing_ture = math.atan2((y_cn - y_os), (x_cn - x_os))
+    ture_bearing = math.atan2((y_cn - y_os), (x_cn - x_os))
     # result in radians between 0 and 2*pi
-    # true_bearing = wrap_to_2pi(true_bearing)
+    ture_bearing = wrap_to_2pi(ture_bearing)
     # result in degrees between 0 and 360
-    bearing_ture = round(math.degrees(bearing_ture), 2)
-    while bearing_ture >= 180:
-        bearing_ture -= 360
-    while bearing_ture < -180:
-        bearing_ture += 360
-    return bearing_ture
+    ture_bearing = round(math.degrees(ture_bearing), 2)
+    #     while bearing_ture >= 180:
+    #         bearing_ture -= 360
+    #     while bearing_ture < -180:
+    #         bearing_ture += 360
+    return ture_bearing
 
 
 def relative_bearing(x_os, y_os, theta_os, x_cn, y_cn):
@@ -128,20 +140,20 @@ def relative_bearing(x_os, y_os, theta_os, x_cn, y_cn):
     calculate the relative bearing
     :param x_os:
     :param y_os:
-    :param theta_os:
+    :param theta_os: value in degrees
     :param x_cn:
     :param y_cn:
-    :return:
+    :return: relative bearing (result in degrees)
     """
     rel_bearing = true_bearing(x_os, y_os, x_cn, y_cn) - theta_os
     # Relative bearing is between -pi, pi
-    # rel_bearing = wrap_to_pi(math.radians(rel_bearing))
+    rel_bearing = wrap_to_pi(math.radians(rel_bearing))
     # result in degrees between 0 and 360
-    # rel_bearing = round(math.degrees(rel_bearing), 2)
-    while rel_bearing >= 180:
-        rel_bearing -= 360
-    while rel_bearing < -180:
-        rel_bearing += 360
+    rel_bearing = round(math.degrees(rel_bearing), 2)
+    # while rel_bearing >= 180:
+    #     rel_bearing -= 360
+    # while rel_bearing < -180:
+    #     rel_bearing += 360
     return rel_bearing
 
 
@@ -150,11 +162,11 @@ def colregs_rule(ship1_x, ship1_y, ship1_psi, ship1_u, ship2_x, ship2_y, ship2_p
     check COLREGs
     :param ship1_x:
     :param ship1_y:
-    :param ship1_psi:
+    :param ship1_psi: value in degrees
     :param ship1_u:
     :param ship2_x:
     :param ship2_y:
-    :param ship2_psi:
+    :param ship2_psi: value in degrees
     :param ship2_u:
     :return: state according COLREGs
     """
@@ -165,12 +177,12 @@ def colregs_rule(ship1_x, ship1_y, ship1_psi, ship1_u, ship2_x, ship2_y, ship2_p
     # Head on
     if abs(RB_os_ts) < 13 and abs(RB_ts_os) < 13:
         rule = 'HO-GW'
-    # Overtaking, stand on
-    elif abs(RB_os_ts) > 112.5 and abs(RB_ts_os) < 45 and (ship2_u > (ship1_u * 1.1)):
-        rule = 'OT-SO'
     # Overtaking, give way
-    elif abs(RB_ts_os) > 112.5 and abs(RB_os_ts) < 45 and (ship1_u > (ship2_u * 1.1)):
+    elif abs(RB_ts_os) > 112.5 and abs(RB_os_ts) < 45 and (ship2_u > (ship1_u * 1.1)):
         rule = 'OT-GW'
+    # Overtaking, stand on
+    elif abs(RB_os_ts) > 112.5 and abs(RB_ts_os) < 45 and (ship1_u > (ship2_u * 1.1)):
+        rule = 'OT-SO'
     # Crossing, give way
     elif 0 < RB_os_ts < 112.5 and 10 > RB_ts_os > -112.5:
         rule = 'CR-SO'
@@ -181,7 +193,42 @@ def colregs_rule(ship1_x, ship1_y, ship1_psi, ship1_u, ship2_x, ship2_y, ship2_p
         rule = 'Null'
     return rule
 
-# if __name__ == '__main__':
+
+def CPA(x1, x2, psi1, v1, y1, y2, psi2, v2):
+    """
+    :param x1:
+    :param x2:
+    :param psi1: value in degrees
+    :param v1:
+    :param y1:
+    :param y2:
+    :param psi2: value in degrees
+    :param v2:
+    :return:
+    """
+    # alpha_r (True bearing of the TS)
+    alpha_r = true_bearing(x1, y1, x2, y2)
+
+    # chi_r (Relative course of TS (from 0 to U_r))
+    U_1 = v1 * math.cos(math.radians(psi1))
+    V_1 = v1 * math.sin(math.radians(psi1))
+    U_2 = v2 * math.cos(math.radians(psi2))
+    V_2 = v2 * math.sin(math.radians(psi2))
+    chi_r = true_bearing(U_1, V_1, U_2, V_2)
+
+    beta = math.radians(alpha_r - chi_r) - math.pi
+
+    # Distance between ships
+    D_r = math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+
+    # Relative speed
+    U_r = math.sqrt((U_1 - U_2) ** 2 + (V_1 - V_2) ** 2)
+
+    DCPA = D_r * math.sin(beta)
+    TCPA = (D_r * math.cos(beta)) / abs(U_r)
+    return DCPA, TCPA
+
+if __name__ == '__main__':
     # ship1_x = -5000
     # ship1_y = 0
     # ship1_psi = 0
@@ -213,16 +260,4 @@ def colregs_rule(ship1_x, ship1_y, ship1_psi, ship1_u, ship2_x, ship2_y, ship2_p
     # print(colregs_rule(ship1_x, ship1_y, ship1_psi, ship1_u, ship2_x, ship2_y, ship2_psi, ship2_u))
     # print(colregs_rule(ship2_x, ship2_y, ship2_psi, ship2_u, ship1_x, ship1_y, ship1_psi, ship1_u))
 
-def delete_files(dir_path):
-    """
-    delete all files in the given folder
-    :param dir_path: the path of the given folder
-    :return:
-    """
-    for root, dirs, files in os.walk(dir_path, topdown=False):
-        for name in files:
-            os.remove(os.path.join(root, name))  # delete files
-
-if __name__ == '__main__':
-    dir = os.path.dirname(os.path.realpath(__file__)) + '\SavedTrainingProcess'
-    delete_files(dir)
+    print(CPA(ship1_x, ship1_y, ship1_psi, ship2_u, ship2_x, ship2_y, ship2_psi, ship2_u))
