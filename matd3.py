@@ -1,5 +1,5 @@
 """
-Function for building Multi-Agent Twin Delayed Deep Deterministic Policy Gradient(MATD3) algorithm.
+Function for building Multi-Agent Deep Deterministic Policy Gradient(MATD3) algorithm.
 
 Using:
 pytroch: 1.10.2
@@ -94,6 +94,7 @@ class MATD3:
 
         critic_losses = []
         actor_losses = []
+
         # handle cost function
         for agent_idx, agent in enumerate(self.agents):
             # current Q estimate
@@ -101,30 +102,33 @@ class MATD3:
             # target Q value
             with T.no_grad():
                 target_Q1, target_Q2 = agent.target_critic.forward(states_, new_actions)
-                target_Q = T.min(target_Q1, target_Q2)
-                target_Q[dones[:, 0]] = 0.0
-                target_Q = rewards[:, agent_idx] + (agent.gamma * target_Q).detach()
+                target_Q_min = T.min(target_Q1, target_Q2)
+                # target_Q[dones[:, 0]] = 0.0
+                target_Q = rewards[:, agent_idx] + (agent.gamma * target_Q_min).detach()
             # critic loss
             critic_loss = F.mse_loss(current_Q1.float(), target_Q.float()) +\
-                          F.mse_loss(current_Q2.float(), target_Q.float())
+                                F.mse_loss(current_Q2.float(), target_Q.float())
 
             # critic optimization
             agent.critic.optimizer.zero_grad()
             critic_loss.backward()
             agent.critic.optimizer.step()
+
             critic_losses.append(critic_loss)
             writer.add_scalar('agent_%s' % agent_idx + '_critic_loss', critic_losses[agent_idx], steps_total)
 
-            if steps_total % self.freq == 0:
+            # for agent_idx, agent in enumerate(self.agents):
+            if steps_total % self.freq == 0 and steps_total > 0:
                 # actor loss
-                actor_loss = agent.critic.Q1(states, mu).flatten()
+                actor_loss = agent.critic.Q1(states, mu).detach()
+                actor_loss.requires_grad = True
                 actor_loss = -T.mean(actor_loss)
                 # actor optimization
                 agent.actor.optimizer.zero_grad()
                 actor_loss.backward()
                 agent.actor.optimizer.step()
-
                 agent.update_network_parameters()
 
                 actor_losses.append(actor_loss)
                 writer.add_scalar('agent_%s' % agent_idx + '_actor_loss', actor_losses[agent_idx], steps_total)
+
