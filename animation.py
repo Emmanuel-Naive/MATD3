@@ -12,6 +12,7 @@ from functions import *
 
 def animate(i):
     time_text.set_text(time_template % (i * dt))
+
     for n in range(env.ships_num):
         if i > 0:
             headings[n] = ax.patches.remove(headings[n])
@@ -21,18 +22,18 @@ def animate(i):
             dx = states[i, 0, 3 * n] - states[i-1, 0, 3 * n]
             dy = states[i, 0, 3 * n + 1] - states[i-1, 0, 3 * n + 1]
             headings[n] = ax.arrow(states[i, 0, 3 * n], states[i, 0, 3 * n + 1], dx, dy,
-                                   head_width=800, head_length=800, fc=colorset[n], ec=colorset[n])
+                                   head_width=500, head_length=500, fc=colorset[n], ec=colorset[n])
     # return time_text, ship_markers, past_trajectory
 
 
 if __name__ == '__main__':
     result_dir = os.path.dirname(os.path.realpath(__file__)) + '\SavedResult'
-    # states = np.load(result_dir + '/path_global.npy')
-    states = np.load(result_dir + '/path_last.npy')
+    states = np.load(result_dir + '/path_global.npy')
+    # states = np.load(result_dir + '/path_last.npy')
     # states = np.load(result_dir + '/path_test.npy')
 
-    scenario = '1Ship'
-    # scenario = '2Ships_Cross'
+    # scenario = '1Ship'
+    scenario = '2Ships_Cross'
     # scenario = '2Ships_Headon'
     # scenario = '3Ships_Cross&Headon'
     env = get_data(scenario)
@@ -63,13 +64,14 @@ if __name__ == '__main__':
     for i in range(env.ships_num):
         past_trajectory.append(ax.plot([], [], c=colorset[i], dashes=[8, 4], alpha=0.8)[0])
         headings.append(ax.arrow([], [], [], []))
+
         plt.scatter(env.ships_goal[i, 0], env.ships_goal[i, 1], 20, marker='x', color=colorset[i])
     time_template = 'time = %.1fs'
     time_text = ax.text(0.05, 0.9, '', transform=ax.transAxes)
 
+
     frequency = 1  # when this value is set lower than 1, the
     ani_path = animation.FuncAnimation(fig, animate, len(states), interval=frequency, blit=False)
     plt.show()
-
     # ani.save("result.gif", writer='pillow')
     ani_path.save(result_dir + '/animation.mp4', writer='ffmpeg', fps=50)
