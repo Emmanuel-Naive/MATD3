@@ -1,5 +1,6 @@
 """
 Main function
+Type in terminal to see writer in web page: tensorboard --logdir=SavedLosses
 
 CUDA version: 11.2
 tensorboard: 2.9.0
@@ -15,8 +16,8 @@ from torch.utils.tensorboard import SummaryWriter
 if __name__ == '__main__':
     # True: train network; False: test network
     train_model = True
-    scenario = '1Ship'
-    # scenario = '2Ships_Cross'
+    # scenario = '1Ship'
+    scenario = '2Ships_Cross'
     # scenario = '2Ships_Headon'
     # scenario = '3Ships_Cross&Headon'
     env = MultiAgentEnv(scenario)
@@ -30,21 +31,24 @@ if __name__ == '__main__':
     chkpt_dir = os.path.dirname(os.path.realpath(__file__)) + '\SavedNetwork'
     learn_interval = 100
     marl_agents = MATD3(chkpt_dir, actor_dims, critic_dims, n_agents, n_actions, learn_interval,
-                           fc1=32, fc2=16, alpha=0.01, beta=0.01)
+                        fc1=32, fc2=16, alpha=0.01, beta=0.01)
     max_size = 1000000
     memory = MultiAgentReplayBuffer(max_size, actor_dims, critic_dims, n_agents, n_actions, batch_size=1024)
 
-    dis_redun = 20
-    dis_safe = 15
+    dis_redun = 100
+    dis_safe = 100
+    dis_CPA1 = dis_safe * 5
+    dis_CPA2 = dis_safe
     check_env = CheckState(env.ships_num, env.ships_pos, env.ships_term, env.ships_head, env.ships_speed,
-                           dis_redun, dis_safe)
+                           dis_redun, dis_safe, dis_CPA1, dis_CPA2)
+    reward_max = check_env.reward_max
 
     norm_data = NormalizeData(env.ships_dis_max)
 
     steps_games = 10000  # number of maximum episodes
     steps_exp = steps_games / 2
     # a reasonable simulation time
-    steps_max = (((env.ships_dis_max / env.ships_vel_min)//500) + 1) * 500
+    steps_max = (((env.ships_dis_max / env.ships_vel_min) // 500) + 1) * 500
     print('... the maximum simulation step in each episode:', steps_max[0], '...')
     steps_total = 0
     print_interval = 500
@@ -77,7 +81,6 @@ if __name__ == '__main__':
             done_reset = False
             done_goal = env.ships_done_term
 
-
             score = 0
             step_episode = 0
             if i < steps_exp:
@@ -88,50 +91,48 @@ if __name__ == '__main__':
 
             path_local = []
             path_local.append(obs.reshape(1, -1))
-            rewards_local =[]
+            rewards_local = []
 
+            dis_closest = 0
+            t_closest = 0
             while not done_reset:
-                # if i == 0:
-                #     actions = [0]
-                # else:
-                #     actions = marl_agents.choose_action(n_obs, Exploration)
                 actions = marl_agents.choose_action(n_obs, Exploration)
-                # print(actions)
                 # list type, example: [-1.0, 1.0]
                 obs_ = env.step(actions).copy()
-                # print(i, obs_)
 
                 # For local observation problems, observations are not equal to states.
                 # For global observation problems, observations are equal to states.
                 # For simplification, just set: observations = states.
-                state = obs.reshape(1, -1)
-                state_ = obs_.reshape(1, -1)
+                state = obs.reshape(1, -1).copy()
+                state_ = obs_.reshape(1, -1).copy()
 
                 # reward
-                reward_term = check_env.check_term(obs_)
-                reward_term_max = 20
-
-                # reward_coll, done_coll = check_env.check_coll(obs, obs_)
-
-                # reward_CORLEG = check_env.check_CORLEGs(obs, obs_)
-
                 reward_done, done_goal = check_env.check_done(obs_, done_goal)
-
-                reward = reward_term + reward_done
-                reward_max = reward_term_max
-                # reward = reward_term + reward_coll + reward_CORLEG - reward_alive
+                reward_term = check_env.check_term(obs_)
+                if env.ships_num == 1:
+                    reward = reward_term + reward_done
+                else:
+                    reward_coll, done_coll, dis_coll = check_env.check_coll(obs_)
+                    reward_CORLEG, table = check_env.check_CORLEGs(obs, obs_)
+                    reward_CPA = check_env.check_CPA(obs_)
+                    reward = reward_term + reward_done + reward_coll + reward_CORLEG + reward_CPA
+                # print(step_episode, table)
                 # print(reward, reward_term, reward_coll, reward_CORLEG)
                 rewards_local.append(reward)
 
+                if step_episode == 0:
+                    dis_closest = dis_coll
+                elif dis_closest < dis_coll:
+                    dis_closest = dis_coll
+                    t_closest = step_episode
+
                 if step_episode >= steps_max:
                     done_reset = True
-                # if all(done_goal):
-                # if i == 0:
-                #     print(i, state, done_goal)
                 if any(done_goal):
                     done_reset = True
-                # if done_coll:
-                #     done_reset = True
+                if env.ships_num > 1:
+                    if done_coll:
+                        done_reset = True
 
                 # data normalization
                 n_reward = reward.copy()
@@ -154,12 +155,14 @@ if __name__ == '__main__':
                 # print(n_obs, n_obs_)
                 memory.store_transition(n_obs, n_state, actions, n_reward, n_obs_, n_state_, done_goal)
                 if not memory.ready():
-                    continue
+                    pass
                 else:
+                    # See losses in writer, which can be shown in web page
+                    # Type in terminal to see writer: tensorboard --logdir=SavedLosses
                     marl_agents.learn(memory, writer, steps_total)
 
                 obs = obs_.copy()
-                path_local.append(state)
+                path_local.append(state_)
 
                 score += sum(reward)
                 steps_total += 1
@@ -174,14 +177,16 @@ if __name__ == '__main__':
                 score_best = score
                 path_global = path_local
                 rewards_global = rewards_local
+                np.save(result_dir + '/path_global.npy', path_global)
+                np.save(result_dir + '/info_closest_global.npy', [dis_closest, t_closest])
                 print('... updating the optimal path group ( episode:', i, ', reward:', score_best, ') ...')
 
             score_history.append(score)
             score_avg = np.mean(score_history[-100:])
             score_avg_history.append(score)
             if score_avg > score_best_avg:
-                    marl_agents.save_checkpoint()
-                    score_best_avg = score_avg
+                marl_agents.save_checkpoint()
+                score_best_avg = score_avg
             if i % print_interval == 0 and i > 0:
                 print('episode', i, 'average score of last 100 episodes: {:.1f}'.format(score_avg))
 
@@ -243,7 +248,6 @@ if __name__ == '__main__':
             reward_done, done_goal = check_env.check_done(obs_, done_goal)
 
             reward = reward_term
-            reward_max = reward_term_max
             # reward = reward_term + reward_coll + reward_CORLEG - reward_alive
             # print(reward, reward_term, reward_coll, reward_CORLEG)
 
