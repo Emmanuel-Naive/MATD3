@@ -22,7 +22,7 @@ import torch.optim as optim
 def init_weights(layer):
     if type(layer) == nn.Linear:
         nn.init.uniform_(layer.weight, a=-0.001, b=0.001)
-        nn.init.constant_(layer.bias, 0.1)
+        nn.init.constant_(layer.bias, 0)
 
 
 class CriticNetwork(nn.Module):
