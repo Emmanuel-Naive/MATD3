@@ -225,7 +225,10 @@ def CPA(x1, x2, psi1, v1, y1, y2, psi2, v2):
     U_r = math.sqrt((U_1 - U_2) ** 2 + (V_1 - V_2) ** 2)
 
     DCPA = D_r * math.sin(beta)
-    TCPA = (D_r * math.cos(beta)) / abs(U_r)
+    if U_r == 0:
+        TCPA = (D_r * math.cos(beta)) / 0.1
+    else:
+        TCPA = (D_r * math.cos(beta)) / abs(U_r)
     return DCPA, TCPA
 
 if __name__ == '__main__':
