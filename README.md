@@ -15,7 +15,7 @@ This code is modified based on the privious MADDPG algorithm:https://github.com/
   os, math, random: Python built-in package
 
 ## Known issues:
-  1. These codes sometimes could only work on 1 core of CPU:  
+  1. These codes sometimes could only work on 1 core of CPU, but I am not sure that parallel processing could be used in deep reinforcement learning because data in each episode can not be processed individually. However, data for each vessel can be processed individually.
       Here are some tests on different computer:  
       Computer 1(CPU: Inter i5-6300HQ; GPU: NVIDIA GTX965m): work on all cores  
       Computer 2(CPU: Inter Xeon 5218): work on most cores  
