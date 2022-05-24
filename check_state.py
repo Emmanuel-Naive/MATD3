@@ -164,15 +164,23 @@ class CheckState:
         """
         reward_coll = np.zeros(self.agents_num)
         done_coll = False
+        dis_buffer = []
         for ship_i in range(self.agents_num):
             for ship_j in range(ship_i + 1, self.agents_num):
                 dis_coll = euc_dist(next_state[ship_i, 0], next_state[ship_j, 0],
                                     next_state[ship_i, 1], next_state[ship_j, 1])
+                dis_buffer.append([dis_coll, ship_i, ship_j])
                 if dis_coll < self.dis_s:
                     done_coll = True
                     reward_coll[ship_i] = reward_coll[ship_i] - 100
                     reward_coll[ship_j] = reward_coll[ship_j] - 100
-        return reward_coll, done_coll, dis_coll
+
+        dis_buffer = np.array(dis_buffer)
+        dis_buffer = np.array(dis_buffer)
+        dis_min = np.min(dis_buffer[:, 0])
+        dis_min_index = np.where(dis_buffer[:, 0] == dis_min)
+        dis_closest = dis_buffer[dis_min_index[0], :]
+        return reward_coll, done_coll, dis_closest[0]
 
     def check_CPA(self, next_state):
         reward_CPA = np.zeros(self.agents_num)
