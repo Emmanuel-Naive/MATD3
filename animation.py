@@ -9,8 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from functions import *
 
-
-def animate(i):
+def animate1(i):
     time_text.set_text(time_template % (i * dt))
 
     for n in range(env.ships_num):
@@ -25,6 +24,26 @@ def animate(i):
                                    head_width=500, head_length=500, fc=colorset[n], ec=colorset[n])
     # return time_text, ship_markers, past_trajectory
 
+def animate2(i):
+    time_text.set_text(time_template % (i * dt))
+    if i != 0:
+        dis_info = dis_infos[i]
+        dis = round(dis_info[0, 0],1)
+        ship1 = int(dis_info[0, 1] + 1)
+        ship2 = int(dis_info[0, 2] + 1)
+        dis_text.set_text(dis_template.format(dis=dis, ship1=ship1, ship2=ship2))
+    for n in range(env.ships_num):
+        if i > 0:
+            headings[n] = ax.patches.remove(headings[n])
+        past_trajectory[n].set_xdata(states[:i, 0, 3 * n])
+        past_trajectory[n].set_ydata(states[:i, 0, 3 * n + 1])
+        if i > 0:
+            dx = states[i, 0, 3 * n] - states[i-1, 0, 3 * n]
+            dy = states[i, 0, 3 * n + 1] - states[i-1, 0, 3 * n + 1]
+            headings[n] = ax.arrow(states[i, 0, 3 * n], states[i, 0, 3 * n + 1], dx, dy,
+                                   head_width=300, head_length=500, fc=colorset[n], ec=colorset[n])
+    # return time_text, ship_markers, past_trajectory
+
 
 if __name__ == '__main__':
     result_dir = os.path.dirname(os.path.realpath(__file__)) + '\SavedResult'
@@ -37,6 +56,10 @@ if __name__ == '__main__':
     # scenario = '2Ships_Headon'
     # scenario = '3Ships_Cross&Headon'
     env = get_data(scenario)
+    if env.ships_num == 1:
+        pass
+    else:
+        dis_infos = np.load(result_dir + '/info_closest_local.npy')
 
     dt = 1
     t_step = len(states)
@@ -65,13 +88,22 @@ if __name__ == '__main__':
         past_trajectory.append(ax.plot([], [], c=colorset[i], dashes=[8, 4], alpha=0.8)[0])
         headings.append(ax.arrow([], [], [], []))
 
-        plt.scatter(env.ships_goal[i, 0], env.ships_goal[i, 1], 20, marker='x', color=colorset[i])
+        plt.scatter(env.ships_goal[i, 0], env.ships_goal[i, 1], 20, marker='x', color=colorset[i],
+                    label='ship{}'.format(i + 1))
     time_template = 'time = %.1fs'
     time_text = ax.text(0.05, 0.9, '', transform=ax.transAxes)
-
+    if env.ships_num == 1:
+        pass
+    else:
+        dis_template = 'closest_distance = {dis}m \n (distance between {ship1} and {ship2})'
+        dis_text = ax.text(0.05, 0.8, '', transform=ax.transAxes)
 
     frequency = 1  # when this value is set lower than 1, the
-    ani_path = animation.FuncAnimation(fig, animate, len(states), interval=frequency, blit=False)
+    if env.ships_num == 1:
+        ani_path = animation.FuncAnimation(fig, animate1, len(states), interval=frequency, blit=False)
+    else:
+        ani_path = animation.FuncAnimation(fig, animate2, len(states), interval=frequency, blit=False)
+    plt.legend()
     plt.show()
     # ani.save("result.gif", writer='pillow')
-    ani_path.save(result_dir + '/animation.mp4', writer='ffmpeg', fps=50)
+    # ani_path.save(result_dir + '/animation.mp4', writer='ffmpeg', fps=50)
