@@ -13,7 +13,8 @@ This code is modified based on the privious MADDPG algorithm:https://github.com/
   matplotlib: 3.4.1  
   ffmpeg: 2.7.0  
   math, os, random, time: Python built-in package
-
+## Scenarios
+  The illustration of scenarios could be find in:https://github.com/Emmanuel-Naive/MATD3/blob/main/Scenarios/Scenario_illustration.ipynb
 ## Known issues:
   1. These codes sometimes could only work on 1 core of CPU, but I am not sure that parallel processing could be used in deep reinforcement learning because data in each episode can not be processed individually. However, data for each vessel may be able to be processed individually.
       Here are some tests on different computer:  
