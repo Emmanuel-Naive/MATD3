@@ -183,6 +183,11 @@ class CheckState:
         return reward_coll, done_coll, dis_closest[0]
 
     def check_CPA(self, next_state):
+        """
+        Function for checking CPA
+        :param next_state:
+        :return:
+        """
         reward_CPA = np.zeros(self.agents_num)
         for ship_i in range(self.agents_num):
             for ship_j in range(ship_i + 1, self.agents_num):
