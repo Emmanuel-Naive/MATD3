@@ -6,28 +6,30 @@ from make_env import MultiAgentEnv
 
 
 class CheckState:
-    def __init__(self, num_agent, pos_init, pos_term, head_init, vel_init, dis_goal, dis_collision,
-                 dis_CPA1, dis_CPA2):
+    def __init__(self, num_agent, pos_init, pos_term, vel_init, head_init, head_limit, dis_goal, dis_collision,
+                 dis_C1, dis_C2):
         """
         :param num_agent: number of agents
         :param pos_init: initial positions of ships
         :param pos_term: terminal positions of ships
-        :param head_init: initial heading angles of ships
         :param vel_init: initial velocities of ships
+        :param head_init: initial heading angles of ships
+        :param head_limit: max value of heading angle changing in one step
         :param dis_goal: redundant distance for checking goal
         :param dis_collision: safe distance for checking collision
-        :param dis_CPA1: redundant distance for checking CPA,
-        :param dis_CPA2: redundant distance for checking CPA,
+        :param dis_C1: redundant distance 1 for checking CPA, dis_C1 > dis_C2
+        :param dis_C2: redundant distance 2 for checking CPA, dis_C1 > dis_C2
         """
         self.agents_num = num_agent
         self.pos_init = pos_init
         self.pos_term = pos_term
-        self.heads = head_init
         self.speeds = vel_init
+        self.heads = head_init
+        self.angle_limit = head_limit
         self.dis_r = dis_goal
         self.dis_s = dis_collision
-        self.dis_c1 = dis_CPA1
-        self.dis_c2 = dis_CPA2
+        self.dis_c1 = dis_C1
+        self.dis_c2 = dis_C2
 
         if num_agent > 1:
             distance = []
@@ -230,7 +232,7 @@ class CheckState:
                     # get reward according heading angles
                     if self.rules_table[ship_i, ship_j] == 'HO-GW' or 'OT-GW' or 'CR-GW':
                         # Ship steered starboard (negative head_diff)
-                        reward_CORLEGs[ship_i] -= head_diff[ship_i] * self.max_reward_COLREGs
+                        reward_CORLEGs[ship_i] -= (head_diff[ship_i] / self.angle_limit) * self.max_reward_COLREGs
                     if self.rules_table[ship_i, ship_j] == 'OT-SO' or 'CR-SO':
                         # stand-on: The smaller heading angles change, the better rewards
                         if abs(head_diff[ship_i]) < 0.1:
