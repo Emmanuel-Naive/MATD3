@@ -57,7 +57,7 @@ if __name__ == '__main__':
 
     norm_data = NormalizeData(env.ships_dis_max)
 
-    steps_games = 3000  # number of maximum episodes
+    steps_games = 10000  # number of maximum episodes
     steps_exp = steps_games / 2
     # a reasonable simulation time
     steps_max = (((env.ships_dis_max / env.ships_vel_min) // 500) + 1) * 500
