@@ -33,7 +33,7 @@ This code is modified based on the privious MADDPG algorithm:https://github.com/
              learn_function (would take 0.0156s or 0.0312s, after the GPU acceleration)  
              reward_function (would take 0.000s)  
              norm_function (would take 0.000s)  
-             store_function (would take 0.000s)  ```
+             store_function (would take 0.000s)
   2. The error happens when using backward() for optimizing actors.  
   ```RuntimeError: Trying to backward through the graph a second time (or directly access saved tensors after they have already been freed). Saved intermediate values of the graph are freed when you call .backward() or autograd.grad(). Specify retain_graph=True if you need to backward through the graph a second time or if you need to access saved tensors after calling backward.```  
  Details: https://discuss.pytorch.org/t/i-am-training-my-multi-agents-reinforcement-learning-project-and-i-got-an-error-trying-to-backward-through-the-graph-a-second-time/152352
