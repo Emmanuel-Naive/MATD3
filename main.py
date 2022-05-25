@@ -47,12 +47,12 @@ if __name__ == '__main__':
     max_size = 1000000
     memory = MultiAgentReplayBuffer(max_size, actor_dims, critic_dims, n_agents, n_actions, batch_size=1024)
 
-    dis_redun = 100
+    dis_redundant = 100
     dis_safe = 100
     dis_CPA1 = dis_safe * 5
     dis_CPA2 = dis_safe
     check_env = CheckState(env.ships_num, env.ships_pos, env.ships_term, env.ships_speed, env.ships_head,
-                           env.angle_limit, dis_redun, dis_safe, dis_CPA1, dis_CPA2)
+                           env.angle_limit, dis_redundant, dis_safe, dis_CPA1, dis_CPA2)
     reward_max = check_env.reward_max
 
     norm_data = NormalizeData(env.ships_dis_max)
@@ -166,7 +166,6 @@ if __name__ == '__main__':
 
                 n_state = n_obs.reshape(1, -1)
                 n_state_ = n_obs_.reshape(1, -1)
-                # print(n_obs, n_obs_)
                 memory.store_transition(n_obs, n_state, actions, n_reward, n_obs_, n_state_, done_goal)
 
                 if not memory.ready():
@@ -188,13 +187,13 @@ if __name__ == '__main__':
                 step_episode += 1
             if i == 0:
                 score_best = score
-                np.save(result_dir + '/path_first.npy', path_local)
-                np.save(result_dir + '/rewards_first.npy', rewards_global)
-                if env.ships_num == 1:
-                    pass
-                else:
-                    np.save(result_dir + '/info_closest_global_first.npy', [dis_closest, t_closest])
-                    np.save(result_dir + '/info_closest_local_first.npy', dis_info)
+                # np.save(result_dir + '/path_first.npy', path_local)
+                # np.save(result_dir + '/rewards_first.npy', rewards_global)
+                # if env.ships_num == 1:
+                #     pass
+                # else:
+                #     np.save(result_dir + '/info_closest_most_first.npy', [dis_closest, t_closest])
+                #     np.save(result_dir + '/info_closest_all_first.npy', dis_info)
                 print('... updating the optimal path group ( episode:', i, ', reward:', score_best, ') ...')
             elif score > score_best:
                 score_best = score
@@ -204,8 +203,8 @@ if __name__ == '__main__':
                 if env.ships_num == 1:
                     pass
                 else:
-                    np.save(result_dir + '/info_closest_global.npy', [dis_closest, t_closest])
-                    np.save(result_dir + '/info_closest_local.npy', dis_info)
+                    np.save(result_dir + '/info_closest_most_global.npy', [dis_closest, t_closest])
+                    np.save(result_dir + '/info_closest_all_global.npy', dis_info)
                 print('... updating the optimal path group ( episode:', i, ', reward:', score_best, ') ...')
 
 
@@ -226,13 +225,12 @@ if __name__ == '__main__':
         np.save(result_dir + '/score_avg_history.npy', score_avg_history)
 
         np.save(result_dir + '/path_last.npy', path_local)
-        np.save(result_dir + '/path_global_last.npy', path_global)
         np.save(result_dir + '/rewards_global_last.npy', rewards_global)
         if env.ships_num == 1:
             pass
         else:
-            np.save(result_dir + '/info_closest_global_last.npy', [dis_closest, t_closest])
-            np.save(result_dir + '/info_closest_local_last.npy', dis_info)
+            np.save(result_dir + '/info_closest_most_last.npy', [dis_closest, t_closest])
+            np.save(result_dir + '/info_closest_all_last.npy', dis_info)
 
     else:
         marl_agents.load_checkpoint()
