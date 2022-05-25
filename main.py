@@ -5,6 +5,8 @@ Type in terminal to see writer in web page: tensorboard --logdir=SavedLoss
 CUDA version: 11.2
 tensorboard: 2.9.0
 """
+import time
+import torch as T
 from functions import *
 from check_state import CheckState
 from buffer import MultiAgentReplayBuffer
@@ -14,10 +16,15 @@ from normalization import NormalizeData
 from torch.utils.tensorboard import SummaryWriter
 
 if __name__ == '__main__':
+    # Check threads (CPU):
+    # print("the number of cpu threads: {}".format(T.get_num_threads()))
     # Check CUDA
     # T.cuda.is_available()
     # Check device: GPUx or CPU
     # T.cuda.get_device_name(0)
+    # Calculate program time
+    # start = time.time()
+    # print("time of each step: {}".format(time.time() - start))
 
     # True: train network; False: test network
     train_model = True
@@ -44,8 +51,8 @@ if __name__ == '__main__':
     dis_safe = 100
     dis_CPA1 = dis_safe * 5
     dis_CPA2 = dis_safe
-    check_env = CheckState(env.ships_num, env.ships_pos, env.ships_term, env.ships_head, env.ships_speed,
-                           dis_redun, dis_safe, dis_CPA1, dis_CPA2)
+    check_env = CheckState(env.ships_num, env.ships_pos, env.ships_term, env.ships_speed, env.ships_head,
+                           env.angle_limit, dis_redun, dis_safe, dis_CPA1, dis_CPA2)
     reward_max = check_env.reward_max
 
     norm_data = NormalizeData(env.ships_dis_max)
@@ -105,13 +112,11 @@ if __name__ == '__main__':
                 actions = marl_agents.choose_action(n_obs, Exploration)
                 # list type, example: [-1.0, 1.0]
                 obs_ = env.step(actions).copy()
-
                 # For local observation problems, observations are not equal to states.
                 # For global observation problems, observations are equal to states.
                 # For simplification, just set: observations = states.
                 state = obs.reshape(1, -1).copy()
                 state_ = obs_.reshape(1, -1).copy()
-
                 # reward
                 reward_done, done_goal = check_env.check_done(obs_, done_goal)
                 reward_term = check_env.check_term(obs_)
@@ -125,7 +130,6 @@ if __name__ == '__main__':
                 # print(step_episode, table)
                 # print(reward, reward_term, reward_coll, reward_CORLEG)
                 rewards_local.append(reward)
-
                 if env.ships_num == 1:
                     pass
                 else:
@@ -159,10 +163,12 @@ if __name__ == '__main__':
                     n_obs_[ship_idx, 2] = norm_data.nmlz_ang(obs_[ship_idx, 2])
 
                     n_reward[ship_idx] = norm_data.nmlz_r(reward[ship_idx], reward_max)
+
                 n_state = n_obs.reshape(1, -1)
                 n_state_ = n_obs_.reshape(1, -1)
                 # print(n_obs, n_obs_)
                 memory.store_transition(n_obs, n_state, actions, n_reward, n_obs_, n_state_, done_goal)
+
                 if not memory.ready():
                     pass
                 else:
@@ -180,7 +186,6 @@ if __name__ == '__main__':
                 score += sum(reward)
                 steps_total += 1
                 step_episode += 1
-
             if i == 0:
                 score_best = score
                 np.save(result_dir + '/path_first.npy', path_local)
