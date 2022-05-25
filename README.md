@@ -23,7 +23,8 @@ This code is modified based on the privious MADDPG algorithm:https://github.com/
       Computer 3(CPU: Inter Xeon 5218R; GPU: NVIDIA Quadro P2200): **only** work on 1 core  
       Computer 4(CPU: AMD EPYC 7543): **only** work on 1 core  
      However, if the code must be run **step by step, episode by episode**, this issues does not matter.  
-     ```Some tests results are here(test on computer 1):
+     Some tests results are here(test on computer 1):  
+     ```
      (10000 episodes normally need to take 2 days on calculation)  
      For each episode (need to train 10000 episodes):
         (each episode would take 4-20s. If reaching the maximum steps, this episode would take around 20s)  
