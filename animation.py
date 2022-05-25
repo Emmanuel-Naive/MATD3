@@ -54,12 +54,14 @@ if __name__ == '__main__':
     # scenario = '1Ship'
     scenario = '2Ships_Cross'
     # scenario = '2Ships_Headon'
+    # scenario = '2Ships_Overtaking'
     # scenario = '3Ships_Cross&Headon'
     env = get_data(scenario)
     if env.ships_num == 1:
         pass
     else:
-        dis_infos = np.load(result_dir + '/info_closest_local.npy')
+        dis_infos = np.load(result_dir + '/info_closest_all_global.npy')
+        # dis_infos = np.load(result_dir + '/info_closest_local_last.npy')
 
     dt = 1
     t_step = len(states)
@@ -74,6 +76,16 @@ if __name__ == '__main__':
     x_max = np.max(x) + 500
     y_min = np.min(y) - 500
     y_max = np.max(y) + 500
+    if (x_max - x_min) < (y_max - y_min):
+        x_max_ = x_max
+        x_min_ = x_min
+        x_max += (y_max - y_min - x_max_ + x_min_)/2
+        x_min -= (y_max - y_min - x_max_ + x_min_)/2
+    else:
+        y_max_ = y_max
+        y_min_ = y_min
+        y_max += (x_max - x_min - y_max_ + y_min_)/2
+        y_min -= (x_max - x_min - y_max_ + y_min_)/2
 
     past_trajectory = []
     headings = []
@@ -89,13 +101,13 @@ if __name__ == '__main__':
         headings.append(ax.arrow([], [], [], []))
 
         plt.scatter(env.ships_goal[i, 0], env.ships_goal[i, 1], 20, marker='x', color=colorset[i],
-                    label='ship{}'.format(i + 1))
+                    label='ship{index}(S{ind})'.format(index=i+1, ind=i+1))
     time_template = 'time = %.1fs'
     time_text = ax.text(0.05, 0.9, '', transform=ax.transAxes)
     if env.ships_num == 1:
         pass
     else:
-        dis_template = 'closest_distance = {dis}m \n (distance between {ship1} and {ship2})'
+        dis_template = 'closest_distance = {dis}m \n (distance between S{ship1} and S{ship2})'
         dis_text = ax.text(0.05, 0.8, '', transform=ax.transAxes)
 
     frequency = 1  # when this value is set lower than 1, the
@@ -106,4 +118,4 @@ if __name__ == '__main__':
     plt.legend()
     plt.show()
     # ani.save("result.gif", writer='pillow')
-    # ani_path.save(result_dir + '/animation.mp4', writer='ffmpeg', fps=50)
+    ani_path.save(result_dir + '/animation.mp4', writer='ffmpeg', fps=50)
