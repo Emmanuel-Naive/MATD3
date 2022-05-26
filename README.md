@@ -14,7 +14,7 @@ This code is modified based on the privious MADDPG algorithm:https://github.com/
   ffmpeg: 2.7.0  
   math, os, random, time: Python built-in package
 ## Scenarios illustration
-  The illustration of scenarios could be find in:https://github.com/Emmanuel-Naive/MATD3/blob/main/Scenarios/Scenario_illustration.ipynb
+  The illustration of scenarios could be found in:https://github.com/Emmanuel-Naive/MATD3/blob/main/Scenarios/Scenario_illustration.ipynb
 ## Known issues:
   1. These codes sometimes could only work on 1 core of CPU, but I am not sure that parallel processing could be used in deep reinforcement learning because data in each episode can not be processed individually. However, data for each vessel may be able to be processed individually.
       Here are some tests on different computer:  
@@ -22,7 +22,9 @@ This code is modified based on the privious MADDPG algorithm:https://github.com/
       Computer 2(CPU: Inter Xeon 5218): work on most cores  
       Computer 3(CPU: Inter Xeon 5218R; GPU: NVIDIA Quadro P2200): **only** work on 1 core  
       Computer 4(CPU: AMD EPYC 7543): **only** work on 1 core  
-     However, if the code must be run **step by step, episode by episode**, this issues does not matter.  
+        
+     However, if the code must be run **step by step, episode by episode**, this issues does not matter because codes could not be parallel computed.  
+     Another thought is that in computer 2, those CPU cores are used for calculation of networks, but in computer 1&3, this work would be done by GPUs.
      Some tests results are here(test on computer 1):  
      ```
      (10000 episodes normally need to take 2 days on calculation)  
@@ -38,4 +40,6 @@ This code is modified based on the privious MADDPG algorithm:https://github.com/
              store_function (would take 0.000s)
   2. The error happens when using backward() for optimizing actors.  
   ```RuntimeError: Trying to backward through the graph a second time (or directly access saved tensors after they have already been freed). Saved intermediate values of the graph are freed when you call .backward() or autograd.grad(). Specify retain_graph=True if you need to backward through the graph a second time or if you need to access saved tensors after calling backward.```  
- Details: https://discuss.pytorch.org/t/i-am-training-my-multi-agents-reinforcement-learning-project-and-i-got-an-error-trying-to-backward-through-the-graph-a-second-time/152352
+ Details:   
+ https://discuss.pytorch.org/t/i-am-training-my-multi-agents-reinforcement-learning-project-and-i-got-an-error-trying-to-backward-through-the-graph-a-second-time/152352  
+ https://discuss.pytorch.org/t/when-and-why-do-i-need-to-use-detach-in-loss-calculating-and-backpropagation/152683
