@@ -1,6 +1,8 @@
 """
-Scenario: 2Ships_Head-on
-2 ships are in the head-on rule
+Scenario: 4Ships_Crossing & Head-on & Overtaking
+4 ships are in the crossing rule
+3 ships are in the head-on rule
+2 ships are in the overtaking rule
 
 Definition for data in this scenario:
     ships_num: number of ships, int
@@ -12,27 +14,37 @@ Definition for data in this scenario:
     ship_actions: action spaces of each ship, array[action1, action2, ...]
 """
 from functions import *
-ships_num = 2
+ships_num = 4
 
 ships_init = np.zeros((ships_num, 2))
 ships_goal = np.zeros((ships_num, 2))
 ships_speed = np.zeros((ships_num, 1))
 ships_head = np.zeros((ships_num, 1))
 
-ships_init[0, :] = np.array([10000, 0])
-ships_goal[0, :] = np.array([0, 10000])
+ships_init[0, :] = np.array([0, -2000])
+ships_goal[0, :] = np.array([0, 2000])
 ships_speed[0] = 20
-ships_head[0] = 135
+ships_head[0] = 90
 
-ships_init[1, :] = np.array([0, 10000])
-ships_goal[1, :] = np.array([10000, 0])
+ships_init[1, :] = np.array([-2000, 0])
+ships_goal[1, :] = np.array([2000, 0])
 ships_speed[1] = 20
-ships_head[1] = -45
+ships_head[1] = 0
+
+ships_init[2, :] = np.array([2000, 0])
+ships_goal[2, :] = np.array([-2000, 0])
+ships_speed[2] = 20
+ships_head[2] = 180
+
+ships_init[3, :] = np.array([-1000, 0])
+ships_goal[3, :] = np.array([1000, 0])
+ships_speed[3] = 10
+ships_head[3] = 0
 # actions of ships
 ship_action_space = 1 # heading angle
 angle_limit = 2   # heading angle changing range (-2,2)
 
-
+# --------------------------------------------------
 # calculate below data based on given data
 ships_given_pos = np.vstack((ships_init.reshape(-1), ships_goal.reshape(-1)))
 ships_pos_min = ships_given_pos.min(0)
@@ -60,7 +72,10 @@ if __name__ == '__main__':
     # print(obs)
 
     print(ships_given_pos)
+    print(ships_x_min)
     print(ships_x_max)
-    print(ships_y_max)
     print(ships_dis_max)
     print(ships_vel_min)
+
+    if ships_x_min[0] == ships_x_max[0]:
+        print(2 * (5000 - ships_x_min[0]) / 1000 - 1)
