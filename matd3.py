@@ -107,7 +107,7 @@ class MATD3:
                 target_Q = rewards[:, agent_idx] + (agent.gamma * target_Q_min).detach()
             # critic loss
             critic_loss = F.mse_loss(current_Q1.float(), target_Q.float()) +\
-                                F.mse_loss(current_Q2.float(), target_Q.float())
+                          F.mse_loss(current_Q2.float(), target_Q.float())
 
             # critic optimization
             agent.critic.optimizer.zero_grad()
@@ -120,8 +120,7 @@ class MATD3:
             # for agent_idx, agent in enumerate(self.agents):
             if steps_total % self.freq == 0 and steps_total > 0:
                 # actor loss
-                actor_loss = agent.critic.Q1(states, mu).detach()
-                actor_loss.requires_grad = True
+                actor_loss = agent.critic.Q1(states.detach(), mu.detach())
                 actor_loss = -T.mean(actor_loss)
                 # actor optimization
                 agent.actor.optimizer.zero_grad()
