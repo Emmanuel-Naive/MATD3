@@ -45,12 +45,12 @@ class CheckState:
                 for ship_j in range(self.agents_num):
                     self.rules_table[ship_i, ship_j] = 'Null'
 
-        self.max_reward_term = 10
+        self.max_reward_term = 5
         self.reward_alive = 1
         self.reward_max = self.max_reward_term + self.reward_alive
         if num_agent > 1:
             self.max_reward_CPA = 5
-            self.max_reward_COLREGs = 20
+            self.max_reward_COLREGs = 50
             self.reward_max = self.reward_max + self.max_reward_CPA + self.max_reward_COLREGs
 
     def check_done(self, next_state, done_term):
@@ -199,10 +199,13 @@ class CheckState:
                                  self.speeds[ship_j])
                 if DCPA >= self.dis_c1:
                     reward_CPA[ship_i] = reward_CPA[ship_i] + self.max_reward_CPA
+                    reward_CPA[ship_j] = reward_CPA[ship_j] + self.max_reward_CPA
                 elif self.dis_c2 < DCPA < self.dis_c1:
                     reward_CPA[ship_i] += 0
+                    reward_CPA[ship_j] += 0
                 else:
                     reward_CPA[ship_i] = reward_CPA[ship_i] - self.max_reward_CPA
+                    reward_CPA[ship_j] = reward_CPA[ship_j] - self.max_reward_CPA
         return reward_CPA
 
     def check_CORLEGs(self, state, next_state):
@@ -216,7 +219,6 @@ class CheckState:
         # pos_ = next_state[:, 0:1]
         head_ = next_state[:, 2]
         head_diff = warp_to_180(head_ - head, self.agents_num)
-
         reward_CORLEGs = np.zeros(self.agents_num)
         for ship_i in range(self.agents_num):
             for ship_j in range(self.agents_num):
@@ -230,15 +232,24 @@ class CheckState:
                         pos[ship_j, 0], pos[ship_j, 1],
                         head[ship_j], self.speeds[ship_j])
                     # get reward according heading angles
-                    if self.rules_table[ship_i, ship_j] == 'HO-GW' or 'OT-GW' or 'CR-GW':
+                    if (self.rules_table[ship_i, ship_j] == 'HO-GW' or
+                        self.rules_table[ship_i, ship_j] == 'OT-GW' or
+                        self.rules_table[ship_i, ship_j] == 'CR-GW'):
                         # Ship steered starboard (negative head_diff)
-                        reward_CORLEGs[ship_i] -= (head_diff[ship_i] / self.angle_limit) * self.max_reward_COLREGs
-                    if self.rules_table[ship_i, ship_j] == 'OT-SO' or 'CR-SO':
+                        if head_diff[ship_i] >= 0:
+                            reward_CORLEGs[ship_i] -= self.max_reward_COLREGs
+                        elif -0.8 <= (head_diff[ship_i] / self.angle_limit) < 0:
+                            reward_CORLEGs[ship_i] -= (head_diff[ship_i] / self.angle_limit) * self.max_reward_COLREGs
+                        else:
+                            reward_CORLEGs[ship_i] += self.max_reward_COLREGs
+                    if (self.rules_table[ship_i, ship_j] == 'OT-SO' or
+                        self.rules_table[ship_i, ship_j] == 'CR-SO'):
                         # stand-on: The smaller heading angles change, the better rewards
                         if abs(head_diff[ship_i]) < 0.1:
                             reward_CORLEGs[ship_i] += self.max_reward_COLREGs
                         else:
-                            reward_CORLEGs[ship_i] -= abs(head_diff[ship_i]) * self.max_reward_COLREGs
+                            reward_CORLEGs[ship_i] -= abs((head_diff[ship_i] / self.angle_limit)) * \
+                                                      self.max_reward_COLREGs
         return reward_CORLEGs, self.rules_table
 
 
