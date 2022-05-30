@@ -19,30 +19,35 @@ ships_init = np.zeros((ships_num, 2))
 ships_goal = np.zeros((ships_num, 2))
 ships_speed = np.zeros((ships_num, 1))
 ships_head = np.zeros((ships_num, 1))
+ships_length = np.zeros((ships_num, 1))
 
 ships_init[0, :] = np.array([0, -2000])
 ships_goal[0, :] = np.array([0, 2000])
 ships_speed[0] = 20
 ships_head[0] = 90
+ships_length[0] = 100
 
 ships_init[1, :] = np.array([-2000, 0])
 ships_goal[1, :] = np.array([2000, 0])
 ships_speed[1] = 20
 ships_head[1] = 0
+ships_length[1] = 100
 
 ships_init[2, :] = np.array([2000, 0])
 ships_goal[2, :] = np.array([-2000, 0])
 ships_speed[2] = 20
 ships_head[2] = 180
+ships_length[2] = 100
 
 ships_init[3, :] = np.array([0, 2000])
 ships_goal[3, :] = np.array([0, -2000])
 ships_speed[3] = 20
 ships_head[3] = 270
+ships_length[3] = 100
 
 # actions of ships
-ship_action_space = 1 # heading angle
-angle_limit = 2   # heading angle changing range (-2,2)
+ship_action_space = 1  # heading angle
+angle_limit = 3   # heading angle changing range (-2,2)
 
 # --------------------------------------------------
 # calculate below data based on given data
