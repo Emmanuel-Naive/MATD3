@@ -28,10 +28,8 @@ if __name__ == '__main__':
 
     # True: train network; False: test network
     train_model = True
-    # scenario = '1Ship'
-    scenario = '2Ships_Cross'
-    # scenario = '2Ships_Headon'
-    # scenario = '3Ships_Cross&Headon'
+    scenario = '2Ships_C2'
+
     env = MultiAgentEnv(scenario)
     n_agents = env.ships_num
     actor_dims = env.ships_obs_space
@@ -48,7 +46,7 @@ if __name__ == '__main__':
     memory = MultiAgentReplayBuffer(max_size, actor_dims, critic_dims, n_agents, n_actions, batch_size=1024)
 
     dis_redundant = 100
-    dis_safe = 100
+    dis_safe = env.ships_length.max()/2 + env.ships_speed.max()
     dis_CPA1 = dis_safe * 5
     dis_CPA2 = dis_safe
     check_env = CheckState(env.ships_num, env.ships_pos, env.ships_term, env.ships_speed, env.ships_head,
@@ -57,7 +55,7 @@ if __name__ == '__main__':
 
     norm_data = NormalizeData(env.ships_dis_max)
 
-    steps_games = 10000  # number of maximum episodes
+    steps_games = 3000  # number of maximum episodes
     steps_exp = steps_games / 2
     # a reasonable simulation time
     steps_max = (((env.ships_dis_max / env.ships_vel_min) // 500) + 1) * 500
@@ -127,8 +125,8 @@ if __name__ == '__main__':
                     reward_CORLEG, table = check_env.check_CORLEGs(obs, obs_)
                     reward_CPA = check_env.check_CPA(obs_)
                     reward = reward_term + reward_done + reward_coll + reward_CORLEG + reward_CPA
-                # print(step_episode, table)
-                # print(reward, reward_term, reward_coll, reward_CORLEG)
+                    # print(step_episode, table, actions, reward_CORLEG)
+                    # print(reward, reward_done, reward_term, reward_coll, reward_CPA, reward_CORLEG)
                 rewards_local.append(reward)
                 if env.ships_num == 1:
                     pass
