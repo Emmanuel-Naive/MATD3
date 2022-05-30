@@ -37,10 +37,10 @@ def draw_path(num_ships, ships_init, ships_goal, states, x_min, x_max, y_min, y_
         # ax.step(states[:, 0, 3 * i], states[:, 0, 3 * i + 1], dashes=[2, 1], alpha=0.6,
         #         color=colorset[i], label='ship{}'.format(i + 1))
         ax.step(states[:, 0, 3 * i], states[:, 0, 3 * i + 1], color=colorset[i],
-                label='ship{index}(S{ind})'.format(index=i+1, ind=i+1))
+                label='ship{index}(S{ind})'.format(index=i + 1, ind=i + 1))
         ax.arrow(states[-1, 0, 3 * i], states[-1, 0, 3 * i + 1],
                  states[-1, 0, 3 * i] - states[-2, 0, 3 * i], states[-1, 0, 3 * i + 1] - states[-2, 0, 3 * i + 1],
-                head_width=300, head_length=500, fc=colorset[i], ec=colorset[i])
+                 head_width=300, head_length=500, fc=colorset[i], ec=colorset[i])
     if env.ships_num == 1:
         pass
     else:
@@ -50,10 +50,20 @@ def draw_path(num_ships, ships_init, ships_goal, states, x_min, x_max, y_min, y_
         ship1 = int(dis_info[0, 1] + 1)
         ship2 = int(dis_info[0, 2] + 1)
         dis_template = 'Time:{t}s \nClosest distance:{dis}m \n(distance between \n S{ship1} and S{ship2})'
-        plt.text(x_max+70, y_min+25, dis_template.format(t=len(states), dis=dis, ship1=ship1, ship2=ship2))
+        plt.text(x_max + 70, y_min + 25, dis_template.format(t=len(states), dis=dis, ship1=ship1, ship2=ship2))
     ax.legend(title='Vessel list:', loc='upper left', bbox_to_anchor=(1, 1))
     # plt.scatter(obst_center[:, 0], obst_center[:, 1], 20, 'black', label='obstacle')
     plt.tight_layout()
+    plt.show()
+
+
+def draw_headings(num_ships, states):
+    for i in range(num_ships):
+        plt.figure()
+        plt.xlabel('time(s)')
+        plt.ylabel('Heading angle(deg)')
+        plt.plot(states[:, 0, 3 * i + 2])
+        plt.title('Heading angles of ship{index}'.format(index=i + 1))
     plt.show()
 
 
@@ -83,9 +93,10 @@ if __name__ == '__main__':
     scores = np.load(result_dir + '/score_history.npy')
 
     # scenario = '1Ship'
-    scenario = '2Ships_Cross'
+    # scenario = '2Ships_Cross'
     # scenario = '2Ships_Headon'
     # scenario = '3Ships_Cross&Headon'
+    scenario = '2Ships_H2'
     env = get_data(scenario)
 
     x = np.r_[env.ships_init[:, 0], env.ships_goal[:, 0]]
@@ -106,4 +117,5 @@ if __name__ == '__main__':
         y_min -= (x_max - x_min - y_max_ + y_min_) / 2
 
     # draw_path(env.ships_num, env.ships_init, env.ships_goal, states, x_min, x_max, y_min, y_max)
+    # draw_headings(env.ships_num, states)
     dra_score(scores, weight=0.99)
