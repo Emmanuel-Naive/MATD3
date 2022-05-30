@@ -20,6 +20,7 @@ class MultiAgentEnv:
 
         self.ships_pos = self.case.ships_init.copy()
         self.ships_speed = self.case.ships_speed.copy()
+        self.ships_length = self.case.ships_length.copy()
         self.ships_head = warp_to_360(self.case.ships_head.copy(), self.ships_num)
         self.ships_done_term = [False] * self.ships_num
 
