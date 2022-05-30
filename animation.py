@@ -41,7 +41,7 @@ def animate2(i):
             dx = states[i, 0, 3 * n] - states[i-1, 0, 3 * n]
             dy = states[i, 0, 3 * n + 1] - states[i-1, 0, 3 * n + 1]
             headings[n] = ax.arrow(states[i, 0, 3 * n], states[i, 0, 3 * n + 1], dx, dy,
-                                   head_width=300, head_length=500, fc=colorset[n], ec=colorset[n])
+                                   head_width=50, head_length=100, fc=colorset[n], ec=colorset[n])
     # return time_text, ship_markers, past_trajectory
 
 
@@ -51,17 +51,14 @@ if __name__ == '__main__':
     # states = np.load(result_dir + '/path_last.npy')
     # states = np.load(result_dir + '/path_test.npy')
 
-    # scenario = '1Ship'
-    scenario = '2Ships_Cross'
-    # scenario = '2Ships_Headon'
-    # scenario = '2Ships_Overtaking'
-    # scenario = '3Ships_Cross&Headon'
+    scenario = '2Ships_H2'
+
     env = get_data(scenario)
     if env.ships_num == 1:
         pass
     else:
         dis_infos = np.load(result_dir + '/info_closest_all_global.npy')
-        # dis_infos = np.load(result_dir + '/info_closest_local_last.npy')
+        # dis_infos = np.load(result_dir + '/info_closest_all_last.npy')
 
     dt = 1
     t_step = len(states)
@@ -107,7 +104,7 @@ if __name__ == '__main__':
     if env.ships_num == 1:
         pass
     else:
-        dis_template = 'closest_distance = {dis}m \n (distance between S{ship1} and S{ship2})'
+        dis_template = 'shortest distance in this time: {dis}m \n (distance between S{ship1} and S{ship2})'
         dis_text = ax.text(0.05, 0.8, '', transform=ax.transAxes)
 
     frequency = 1  # when this value is set lower than 1, the
@@ -118,4 +115,4 @@ if __name__ == '__main__':
     plt.legend()
     plt.show()
     # ani.save("result.gif", writer='pillow')
-    ani_path.save(result_dir + '/animation.mp4', writer='ffmpeg', fps=50)
+    ani_path.save(result_dir + '/animation.mp4', writer='ffmpeg', fps=24)
