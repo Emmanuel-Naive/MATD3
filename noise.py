@@ -13,13 +13,13 @@ import matplotlib.pyplot as plt
 
 
 class OUNoise:
-    def __init__(self, action_dimension, mu=0, theta=0.15, sigma=0.05):
+    def __init__(self, action_dimension, mu=0, theta=0.15, sigma=0.2):
         """
         Create Ornstein-Uhlenbeck noise
         :param action_dimension: number of actions
         :param mu: mean value of OU noise, default value is 0
         :param theta: a constant which should be bigger than 0: theta > 0
-        :param sigma: standard deviation of OU noise, default value is 0.2
+        :param sigma: standard deviation of OU noise, default value is 0.05
         """
         self.action_dimension = action_dimension
         self.mu = mu
@@ -70,16 +70,25 @@ if __name__ == '__main__':
     for i in range(time):
         ga_states.append(ga.noise())
 
+    n_l = 0.2
+    ou_states_c = np.clip(ou_states, -n_l, n_l)
+    ga_states_c = np.clip(ga_states, -n_l, n_l)
     # plt.plot(ou_states, label='OUNoise')
     # plt.plot(ga_states, label='GaussNoise')
     # plt.legend()
     # plt.show()
 
     plt.subplot(2, 1, 1)
-    plt.plot(ou_states)
+    plt.plot(ou_states, label='Ornstein-Uhlenbeck noise')
     plt.title('OUNoise')
+    plt.subplot(2, 1, 1)
+    plt.plot(ou_states_c, label='Clipped Ornstein-Uhlenbeck noise')
+    plt.legend(bbox_to_anchor=(0, 0), loc=3, borderaxespad=0)
     plt.subplot(2, 1, 2)
-    plt.plot(ga_states)
+    plt.plot(ga_states, label='Gauss white noise')
     plt.title('GaussNoise')
+    plt.subplot(2, 1, 2)
+    plt.plot(ga_states_c, label='Clipped Gauss white noise')
+    plt.legend(bbox_to_anchor=(0, 0), loc=3, borderaxespad=0)
     plt.tight_layout()
     plt.show()
