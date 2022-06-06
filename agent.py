@@ -54,7 +54,7 @@ class Agent:
         """
         self.exploration_noise.reset()
 
-    def choose_action(self, observation, exploration=True):
+    def choose_action(self, observation, exploration=True, n_l=0.2):
         """
         :param observation:
         :param exploration: exploration flag
@@ -70,7 +70,8 @@ class Agent:
 
         actions = outputs.data.cpu().numpy()
         if exploration:
-            actions += self.exploration_noise.noise()
+            noise = self.exploration_noise.noise()
+            actions += np.clip(noise, -n_l, n_l)
             actions = T.tensor(actions.copy(), dtype=T.float).to(self.actor.device)
             actions = actions.clamp(-1, 1)
         else:
