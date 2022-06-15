@@ -4,6 +4,7 @@ Function for building Multi-Agent Deep Deterministic Policy Gradient(MATD3) algo
 Using:
 pytroch: 1.10.2
 """
+import time
 import torch as T
 import torch.nn.functional as F
 from agent import Agent
@@ -46,10 +47,10 @@ class MATD3:
         for agent_idx, agent in enumerate(self.agents):
             agent.reset_noise()
 
-    def choose_action(self, raw_obs, exploration=True):
+    def choose_action(self, raw_obs, exploration=True, n_l=0.2):
         actions = []
         for agent_idx, agent in enumerate(self.agents):
-            action = agent.choose_action(raw_obs[agent_idx], exploration)
+            action = agent.choose_action(raw_obs[agent_idx], exploration, n_l)
             actions.append(action)
         return actions
 
@@ -57,6 +58,8 @@ class MATD3:
         """
         agents would learn after filling the bitch size of memory, and update actor and critic networks
         :param memory: memory state (from buffer file)
+        :param writer: name of writer for using Tensorboard
+        :param steps_total: total steps
         :return: results after learning
         """
 
@@ -69,7 +72,7 @@ class MATD3:
         rewards = T.tensor(rewards).to(device)
         states_ = T.tensor(states_, dtype=T.float).to(device)
         dones = T.tensor(dones).to(device)
-        # all these three different actions are needed to calculate the loss function
+
         all_agents_new_actions = []  # actions according to the target network for the new state
         all_agents_new_mu_actions = []  # actions according to the regular actor network for the current state
         old_agents_actions = []  # actions the agent actually took
@@ -94,7 +97,6 @@ class MATD3:
 
         critic_losses = []
         actor_losses = []
-
         # handle cost function
         for agent_idx, agent in enumerate(self.agents):
             # current Q estimate
@@ -104,7 +106,7 @@ class MATD3:
                 target_Q1, target_Q2 = agent.target_critic.forward(states_, new_actions)
                 target_Q_min = T.min(target_Q1, target_Q2)
                 # target_Q[dones[:, 0]] = 0.0
-                target_Q = rewards[:, agent_idx] + (agent.gamma * target_Q_min).detach()
+                target_Q = rewards[:, agent_idx] + (agent.gamma * target_Q_min)
             # critic loss
             critic_loss = F.mse_loss(current_Q1.float(), target_Q.float()) +\
                           F.mse_loss(current_Q2.float(), target_Q.float())
@@ -119,15 +121,23 @@ class MATD3:
 
             # for agent_idx, agent in enumerate(self.agents):
             if steps_total % self.freq == 0 and steps_total > 0:
-                # actor loss
-                actor_loss = agent.critic.Q1(states.detach(), mu.detach())
-                actor_loss = -T.mean(actor_loss)
-                # actor optimization
-                agent.actor.optimizer.zero_grad()
-                actor_loss.backward()
-                agent.actor.optimizer.step()
-                agent.update_network_parameters()
+                actor_loss = -agent.critic.Q1(states, mu).mean()
 
                 actor_losses.append(actor_loss)
                 writer.add_scalar('agent_%s' % agent_idx + '_actor_loss', actor_losses[agent_idx], steps_total)
 
+                if agent_idx == 0:
+                    actor_loss_b = actor_loss
+                    agent.actor.optimizer.zero_grad()
+                    actor_loss_b.backward(retain_graph=True)
+                elif agent_idx == self.n_agents - 1:
+                    actor_loss_b += actor_loss
+                    agent.actor.optimizer.zero_grad()
+                    actor_loss_b.backward()
+                    for agent in enumerate(self.agents):
+                        agent.actor.optimizer.step()
+                        agent.update_network_parameters()
+                else:
+                    actor_loss_b += actor_loss
+                    agent.actor.optimizer.zero_grad()
+                    actor_loss_b.backward(retain_graph=True)
