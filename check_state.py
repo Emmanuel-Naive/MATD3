@@ -6,8 +6,8 @@ from make_env import MultiAgentEnv
 
 
 class CheckState:
-    def __init__(self, num_agent, pos_init, pos_term, vel_init, head_init, head_limit, dis_goal, dis_collision,
-                 dis_C1, dis_C2):
+    def __init__(self, num_agent, pos_init, pos_term, vel_init, head_init, head_limit, dis_goal,
+                 ship_max_length, ship_max_speed):
         """
         :param num_agent: number of agents
         :param pos_init: initial positions of ships
@@ -16,9 +16,8 @@ class CheckState:
         :param head_init: initial heading angles of ships
         :param head_limit: max value of heading angle changing in one step
         :param dis_goal: redundant distance for checking goal
-        :param dis_collision: safe distance for checking collision
-        :param dis_C1: redundant distance 1 for checking CPA, dis_C1 > dis_C2
-        :param dis_C2: redundant distance 2 for checking CPA, dis_C1 > dis_C2
+        :param ship_max_length: max value of ship lengths
+        :param ship_max_speed: max value of ship speeds
         """
         self.agents_num = num_agent
         self.pos_init = pos_init
@@ -26,10 +25,15 @@ class CheckState:
         self.speeds = vel_init
         self.heads = head_init
         self.angle_limit = head_limit
+
         self.dis_r = dis_goal
-        self.dis_s = dis_collision
-        self.dis_c1 = dis_C1
-        self.dis_c2 = dis_C2
+        # safe distance for checking collision： dis_c, dis_c_h, dis_c_hn
+        self.dis_c = ship_max_length / 2 + ship_max_speed * 1
+        self.dis_c_h = ship_max_length / 2 + ship_max_speed * 5
+        self.dis_c_hn = ship_max_speed * 1
+        # redundant distance for checking CPA, dis_C1 > dis_C2
+        self.dis_c1 = self.dis_c * 5
+        self.dis_c2 = self.dis_c
 
         if num_agent > 1:
             distance = []
@@ -123,7 +127,7 @@ class CheckState:
 
             if dif_ang < 5:
                 reward_term[ship_idx] = self.max_reward_term
-            elif 5 <= dif_ang < 90:
+            elif 5 <= dif_ang < 30:
                 reward_term[ship_idx] = 0
             else:
                 reward_term[ship_idx] = -self.max_reward_term
@@ -172,10 +176,23 @@ class CheckState:
                 dis_coll = euc_dist(next_state[ship_i, 0], next_state[ship_j, 0],
                                     next_state[ship_i, 1], next_state[ship_j, 1])
                 dis_buffer.append([dis_coll, ship_i, ship_j])
-                if dis_coll < self.dis_s:
+                dis_h_a = math.radians(relative_bearing(next_state[ship_i, 0], next_state[ship_i, 1],
+                                                        next_state[ship_i, 2],
+                                                        next_state[ship_j, 0], next_state[ship_j, 1]))
+                dis_h_b = math.radians(relative_bearing(next_state[ship_j, 0], next_state[ship_j, 1],
+                                                        next_state[ship_j, 2],
+                                                        next_state[ship_i, 0], next_state[ship_i, 1]))
+                if dis_coll < self.dis_c:
                     done_coll = True
-                    reward_coll[ship_i] = reward_coll[ship_i] - 100
-                    reward_coll[ship_j] = reward_coll[ship_j] - 100
+                    reward_coll[ship_i] = reward_coll[ship_i] - 1000
+                    reward_coll[ship_j] = reward_coll[ship_j] - 1000
+                elif dis_coll < self.dis_c_h:
+                    if abs(math.sin(dis_h_a) * dis_coll) <= self.dis_c_hn:
+                        done_coll = True
+                        reward_coll[ship_i] = reward_coll[ship_i] - 1000
+                    if abs(math.sin(dis_h_b) * dis_coll) <= self.dis_c_hn:
+                        done_coll = True
+                        reward_coll[ship_j] = reward_coll[ship_j] - 1000
 
         dis_buffer = np.array(dis_buffer)
         dis_buffer = np.array(dis_buffer)
@@ -233,8 +250,8 @@ class CheckState:
                         head[ship_j], self.speeds[ship_j])
                     # get reward according heading angles
                     if (self.rules_table[ship_i, ship_j] == 'HO-GW' or
-                        self.rules_table[ship_i, ship_j] == 'OT-GW' or
-                        self.rules_table[ship_i, ship_j] == 'CR-GW'):
+                            self.rules_table[ship_i, ship_j] == 'OT-GW' or
+                            self.rules_table[ship_i, ship_j] == 'CR-GW'):
                         # Ship steered starboard (negative head_diff)
                         if head_diff[ship_i] >= 0:
                             reward_CORLEGs[ship_i] -= self.max_reward_COLREGs
@@ -242,14 +259,26 @@ class CheckState:
                             reward_CORLEGs[ship_i] -= (head_diff[ship_i] / self.angle_limit) * self.max_reward_COLREGs
                         else:
                             reward_CORLEGs[ship_i] += self.max_reward_COLREGs
-                    if (self.rules_table[ship_i, ship_j] == 'OT-SO' or
-                        self.rules_table[ship_i, ship_j] == 'CR-SO'):
+                    elif (self.rules_table[ship_i, ship_j] == 'OT-SO' or
+                            self.rules_table[ship_i, ship_j] == 'CR-SO'):
                         # stand-on: The smaller heading angles change, the better rewards
                         if abs(head_diff[ship_i]) < 0.1:
                             reward_CORLEGs[ship_i] += self.max_reward_COLREGs
                         else:
-                            reward_CORLEGs[ship_i] -= abs((head_diff[ship_i] / self.angle_limit)) * \
-                                                      self.max_reward_COLREGs
+                            reward_CORLEGs[ship_i] -= self.max_reward_COLREGs
+                    else:
+                        ang_to_term = true_bearing(next_state[ship_i, 0], next_state[ship_i, 1],
+                                                   self.pos_term[ship_i, 0], self.pos_term[ship_i, 1])
+                        dif_ang = abs(head[ship_i] - ang_to_term)
+                        if dif_ang > 360:
+                            dif_ang -= 360
+
+                        if dif_ang < 5:
+                            reward_CORLEGs[ship_i] = self.max_reward_COLREGs
+                        elif 5 <= dif_ang < 30:
+                            reward_CORLEGs[ship_i] = 0
+                        else:
+                            reward_CORLEGs[ship_i] = -self.max_reward_COLREGs
         return reward_CORLEGs, self.rules_table
 
 
