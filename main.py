@@ -41,21 +41,20 @@ if __name__ == '__main__':
     chkpt_dir = os.path.dirname(os.path.realpath(__file__)) + '\SavedNetwork'
     learn_interval = 100
     marl_agents = MATD3(chkpt_dir, actor_dims, critic_dims, n_agents, n_actions, learn_interval,
-                        fc1=32, fc2=16, alpha=0.01, beta=0.01)
+                        fc1=32, fc2=32, alpha=0.01, beta=0.01)
     max_size = 1000000
     memory = MultiAgentReplayBuffer(max_size, actor_dims, critic_dims, n_agents, n_actions, batch_size=1024)
 
     dis_redundant = 100
-    dis_safe = env.ships_length.max()/2 + env.ships_speed.max()
-    dis_CPA1 = dis_safe * 5
-    dis_CPA2 = dis_safe
+    ship_max_length = env.ships_length.max()
+    ship_max_speed = env.ships_speed.max()
     check_env = CheckState(env.ships_num, env.ships_pos, env.ships_term, env.ships_speed, env.ships_head,
-                           env.angle_limit, dis_redundant, dis_safe, dis_CPA1, dis_CPA2)
+                           env.angle_limit, dis_redundant, ship_max_length, ship_max_speed)
     reward_max = check_env.reward_max
 
     norm_data = NormalizeData(env.ships_dis_max)
 
-    steps_games = 3000  # number of maximum episodes
+    steps_games = 10000  # number of maximum episodes
     steps_exp = steps_games / 2
     # a reasonable simulation time
     steps_max = (((env.ships_dis_max / env.ships_vel_min) // 500) + 1) * 500
