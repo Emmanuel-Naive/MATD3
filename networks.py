@@ -69,7 +69,7 @@ class CriticNetwork(nn.Module):
         x2 = F.relu(self.fc1(T.cat([state, action], dim=1)))
         x2 = F.relu(self.fc2(x2))
         q2 = self.q2(x2)
-        return q1, q2
+        return q1.squeeze(-1), q2.squeeze(-1)
 
     def Q1(self, state, action):
         """
@@ -80,7 +80,7 @@ class CriticNetwork(nn.Module):
         x1 = F.relu(self.fc1(T.cat([state, action], dim=1)))
         x1 = F.relu(self.fc2(x1))
         q1 = self.q1(x1)
-        return q1
+        return q1.squeeze(-1)
 
     def save_checkpoint(self):
         T.save(self.state_dict(), self.chkpt_file)
@@ -124,8 +124,8 @@ class ActorNetwork(nn.Module):
         x = F.leaky_relu(self.fc2(x))
         # x = F.relu(self.fc2(state))
         # output range (-1,1)
-        # pi = nn.Tanh()(self.pi(x))
-        pi = nn.Softsign()(self.pi(x))
+        pi = nn.Tanh()(self.pi(x))
+        # pi = nn.Softsign()(self.pi(x))
 
         return pi
 
