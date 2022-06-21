@@ -133,7 +133,7 @@ if __name__ == '__main__':
                 else:
                     if step_episode == 0:
                         dis_closest = dis_closest_local[0]
-                    elif dis_closest < dis_closest_local[0]:
+                    elif dis_closest > dis_closest_local[0]:
                         dis_closest = dis_closest_local[0]
                         t_closest = step_episode
 
