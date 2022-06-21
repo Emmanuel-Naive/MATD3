@@ -5,6 +5,7 @@ Using:
 pytroch: 1.10.2
 """
 import time
+import numpy as np
 import torch as T
 import torch.nn.functional as F
 from agent import Agent
@@ -68,11 +69,11 @@ class MATD3:
         device = self.agents[0].actor.device
 
         states = T.tensor(states, dtype=T.float).to(device)
-        actions = T.tensor(actions, dtype=T.float).to(device)
+        actions = T.tensor(np.array(actions), dtype=T.float).to(device)
         rewards = T.tensor(rewards).to(device)
         states_ = T.tensor(states_, dtype=T.float).to(device)
         dones = T.tensor(dones).to(device)
-
+        # all these three different actions are needed to calculate the loss function
         all_agents_new_actions = []  # actions according to the target network for the new state
         all_agents_new_mu_actions = []  # actions according to the regular actor network for the current state
         old_agents_actions = []  # actions the agent actually took
