@@ -253,9 +253,9 @@ class CheckState:
                             self.rules_table[ship_i, ship_j] == 'OT-GW' or
                             self.rules_table[ship_i, ship_j] == 'CR-GW'):
                         # Ship steered starboard (negative head_diff)
-                        if head_diff[ship_i] >= 0:
+                        if head_diff[ship_i] > 0:
                             reward_CORLEGs[ship_i] -= self.max_reward_COLREGs
-                        elif -0.8 <= (head_diff[ship_i] / self.angle_limit) < 0:
+                        elif -0.8 < (head_diff[ship_i] / self.angle_limit) <= 0:
                             reward_CORLEGs[ship_i] -= (head_diff[ship_i] / self.angle_limit) * self.max_reward_COLREGs
                         else:
                             reward_CORLEGs[ship_i] += self.max_reward_COLREGs
@@ -304,10 +304,10 @@ if __name__ == '__main__':
     # dis_r = 10
     # dis_s = 15
     done = [False] * ships.ships_num
-    check_env = CheckState(ships.ships_num, ships.ships_pos, ships.ships_term, ships.ships_head, ships.ships_speed,
-                           dis_r, dis_s)
-    print(obs_)
-    reward_term = check_env.check_term(obs_)
-    reward_done, done = check_env.check_done(obs_, done)
-    print(reward_term)
-    print(reward_done)
+    # check_env = CheckState(ships.ships_num, ships.ships_pos, ships.ships_term, ships.ships_head, ships.ships_speed,
+                           # dis_r, dis_s)
+    # print(obs_)
+    # reward_term = check_env.check_term(obs_)
+    # reward_done, done = check_env.check_done(obs_, done)
+    # print(reward_term)
+    # print(reward_done)
