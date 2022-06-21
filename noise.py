@@ -13,13 +13,13 @@ import matplotlib.pyplot as plt
 
 
 class OUNoise:
-    def __init__(self, action_dimension, mu=0, theta=0.15, sigma=0.2):
+    def __init__(self, action_dimension, mu=0, theta=0.15, sigma=0.15):
         """
         Create Ornstein-Uhlenbeck noise
         :param action_dimension: number of actions
-        :param mu: mean value of OU noise, default value is 0
+        :param mu: drift term, default value is 0
         :param theta: a constant which should be bigger than 0: theta > 0
-        :param sigma: standard deviation of OU noise, default value is 0.05
+        :param sigma: a constant which should be bigger than 0: theta > 0
         """
         self.action_dimension = action_dimension
         self.mu = mu
