@@ -8,20 +8,19 @@ import matplotlib.pyplot as plt
 from functions import *
 
 
-# def drawPlanedPath(num_ships, states, x_min, x_max, y_min, y_max, obst_center):
-# :param x_min: value range of coordinate axis: minimum value of x axis
-# :param x_max: value range of coordinate axis: maximum value of x axis
-# :param y_min: value range of coordinate axis: minimum value of y axis
-# :param y_max: value range of coordinate axis: maximum value of y axis
-# :param obst_center: coordinates of obstacles
-def draw_path(num_ships, ships_init, ships_goal, states, x_min, x_max, y_min, y_max):
+def draw_path_all(num_ships, ships_init, ships_goal, states, x_l, x_h, y_l, y_h, time):
     """
-    Function for drawing planned path from reinforcement learning algorithm
+    Function for drawing planned path (all waypoints) from reinforcement learning algorithm
     :param num_ships: number of ships
     :param ships_init: initial positions of ships
     :param ships_goal: target positions of ships
     :param states: states of all ships(x, y, heading)
-    :return: dashed lines of planned paths
+    :param x_l: value range of coordinate axis: minimum value of x axis
+    :param x_h: value range of coordinate axis: maximum value of x axis
+    :param y_l: value range of coordinate axis: minimum value of y axis
+    :param y_h: value range of coordinate axis: maximum value of y axis
+    :param time: last time
+    :return: planned paths
     """
     # more ships need more colors, in which case please add more colors to this set
     colorset = ['b', 'r', 'g', 'y', 'c', 'm']
@@ -29,31 +28,36 @@ def draw_path(num_ships, ships_init, ships_goal, states, x_min, x_max, y_min, y_
     fig, ax = plt.subplots()
     plt.xlabel('East')
     plt.ylabel('North')
-    ax.set(xlim=(x_min, x_max),
-           ylim=(y_min, y_max))
+    ax.set(xlim=(x_l, x_h),
+           ylim=(y_l, y_h))
     for i in range(num_ships):
         plt.scatter(ships_init[i, 0], ships_init[i, 1], 20, marker='s', color=colorset[i], label='initial point')
         plt.scatter(ships_goal[i, 0], ships_goal[i, 1], 20, marker='x', color=colorset[i], label='goal point')
         # ax.step(states[:, 0, 3 * i], states[:, 0, 3 * i + 1], dashes=[2, 1], alpha=0.6,
         #         color=colorset[i], label='ship{}'.format(i + 1))
-        ax.step(states[:, 0, 3 * i], states[:, 0, 3 * i + 1], color=colorset[i],
+        ax.step(states[0:time-1, 0, 3 * i], states[0:time-1, 0, 3 * i + 1], color=colorset[i],
                 label='ship{index}(S{ind})'.format(index=i + 1, ind=i + 1))
-        ax.arrow(states[-1, 0, 3 * i], states[-1, 0, 3 * i + 1],
-                 states[-1, 0, 3 * i] - states[-2, 0, 3 * i], states[-1, 0, 3 * i + 1] - states[-2, 0, 3 * i + 1],
-                 head_width=300, head_length=500, fc=colorset[i], ec=colorset[i])
+        ax.arrow(states[time-1, 0, 3 * i], states[time-1, 0, 3 * i + 1],
+                 states[time-1, 0, 3 * i] - states[time-2, 0, 3 * i],
+                 states[time-1, 0, 3 * i + 1] - states[time-2, 0, 3 * i + 1],
+                 head_width=100, head_length=150, fc=colorset[i], ec=colorset[i])
     if env.ships_num == 1:
         pass
     else:
-        dis_infos = np.load(result_dir + '/info_closest_local_last.npy')
-        dis_info = dis_infos[i]
-        dis = round(dis_info[0, 0], 1)
-        ship1 = int(dis_info[0, 1] + 1)
-        ship2 = int(dis_info[0, 2] + 1)
-        dis_template = 'Time:{t}s \nClosest distance:{dis}m \n(distance between \n S{ship1} and S{ship2})'
-        plt.text(x_max + 70, y_min + 25, dis_template.format(t=len(states), dis=dis, ship1=ship1, ship2=ship2))
-    ax.legend(title='Vessel list:', loc='upper left', bbox_to_anchor=(1, 1))
-    # plt.scatter(obst_center[:, 0], obst_center[:, 1], 20, 'black', label='obstacle')
-    plt.tight_layout()
+        title_template = 'Distance between ships\n at Time {t}s:'
+        plt.text(x_max + 70, y_min + 500, title_template.format(t=time))
+        idx = 0
+        for i in range(num_ships):
+            for j in range(i + 1, num_ships):
+                dis = euc_dist(states[time-1, 0, 3 * i], states[time-1, 0, 3 * i + 1],
+                               states[time-1, 0, 3 * j], states[time-1, 0, 3 * j + 1])
+                dis = round(dis, 3)
+                dis_template = 'S{ship1} and S{ship2}: {dis}m'
+                plt.text(x_max + 70, y_min + 300 + idx, dis_template.format(dis=dis, ship1=i+1, ship2=j+1))
+                idx -= 180
+        ax.legend(title='Vessel list:', loc='upper left', bbox_to_anchor=(1, 1))
+        # plt.scatter(obst_center[:, 0], obst_center[:, 1], 20, 'black', label='obstacle')
+        plt.tight_layout()
     plt.show()
 
 
@@ -87,16 +91,14 @@ def dra_score(score, weight):
 
 if __name__ == '__main__':
     result_dir = os.path.dirname(os.path.realpath(__file__)) + '\SavedResult'
-    states = np.load(result_dir + '/path_global.npy')
-    # states = np.load(result_dir + '/path_test.npy')
+    ship_states = np.load(result_dir + '/path_global.npy')
+    # ship_states = np.load(result_dir + '/path_test.npy')
     # rewards = np.load(result_dir + '/rewards_global.npy')
     scores = np.load(result_dir + '/score_history.npy')
 
     # scenario = '1Ship'
-    # scenario = '2Ships_Cross'
-    # scenario = '2Ships_Headon'
-    # scenario = '3Ships_Cross&Headon'
-    scenario = '2Ships_H2'
+    # scenario = '2Ships_C2m'
+    scenario = '3Ships_C3H2'
     env = get_data(scenario)
 
     x = np.r_[env.ships_init[:, 0], env.ships_goal[:, 0]]
@@ -116,6 +118,28 @@ if __name__ == '__main__':
         y_max += (x_max - x_min - y_max_ + y_min_) / 2
         y_min -= (x_max - x_min - y_max_ + y_min_) / 2
 
-    # draw_path(env.ships_num, env.ships_init, env.ships_goal, states, x_min, x_max, y_min, y_max)
+    if env.ships_num >= 1:
+        dis_min, time_min = np.load(result_dir + '/info_closest_most_global.npy')
+        time_min = int(time_min) - 1
+        # for i in range(len(ship_states)):
+        #     for j in range(env.ships_num):
+        #         for k in range(i + 1, env.ships_num):
+        #             if j == k:
+        #                 continue
+        #             dis = euc_dist(ship_states[i, 0, 3 * j], ship_states[i, 0, 3 * j + 1],
+        #                            ship_states[i, 0, 3 * k], ship_states[i, 0, 3 * k + 1])
+        #             print(i, j, k)
+        #             if dis_min == 0:
+        #                 dis_min = dis
+        #             elif dis_min > dis:
+        #                 dis_min = dis
+        #                 time_min = i
+
+    t_begin = 5
+    t_last = 0
+    # t = t_begin
+    # t = time_min
+    t = t_last
+    draw_path_all(env.ships_num, env.ships_init, env.ships_goal, ship_states, x_min, x_max, y_min, y_max, time_min)
     # draw_headings(env.ships_num, states)
-    dra_score(scores, weight=0.99)
+    # dra_score(scores, weight=0.99)
