@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
     # True: train network; False: test network
     train_model = True
-    scenario = '2Ships_C2'
+    scenario = '3Ships_O3'
 
     env = MultiAgentEnv(scenario)
     n_agents = env.ships_num
@@ -71,6 +71,8 @@ if __name__ == '__main__':
     result_dir = os.path.dirname(os.path.realpath(__file__)) + '\SavedResult'
     rewards_global = []
 
+    actions_global = []
+
     writer = SummaryWriter("SavedLoss")
     writer_dir = os.path.dirname(os.path.realpath(__file__)) + '\SavedLoss'
     delete_files(writer_dir)
@@ -101,6 +103,7 @@ if __name__ == '__main__':
 
             path_local = []
             rewards_local = []
+            actions_local = []
 
             dis_closest = 0
             t_closest = 0
@@ -125,6 +128,7 @@ if __name__ == '__main__':
                     reward_CORLEG, table = check_env.check_CORLEGs(obs, obs_)
                     reward_CPA = check_env.check_CPA(obs_)
                     reward = reward_term + reward_done + reward_coll + reward_CORLEG + reward_CPA
+                    # print(done_coll)
                     # print(step_episode, table, actions, reward_CORLEG)
                     # print(reward, reward_done, reward_term, reward_coll, reward_CPA, reward_CORLEG)
                 rewards_local.append(reward)
@@ -142,7 +146,7 @@ if __name__ == '__main__':
                 if any(done_goal):
                     done_reset = True
                 if env.ships_num > 1:
-                    if done_coll:
+                    if any(done_coll):
                         done_reset = True
 
                 # data normalization
@@ -174,6 +178,7 @@ if __name__ == '__main__':
                     marl_agents.learn(memory, writer, steps_total)
 
                 obs = obs_.copy()
+                actions_local.append(actions)
                 path_local.append(state)
                 if env.ships_num == 1:
                     pass
@@ -197,7 +202,9 @@ if __name__ == '__main__':
                 score_best = score
                 path_global = path_local
                 rewards_global = rewards_local
+                actions_global = actions_local
                 np.save(result_dir + '/path_global.npy', path_global)
+                np.save(result_dir + '/speed_global.npy', actions_global)
                 if env.ships_num == 1:
                     pass
                 else:
