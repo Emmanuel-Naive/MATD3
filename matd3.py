@@ -59,8 +59,6 @@ class MATD3:
         """
         agents would learn after filling the bitch size of memory, and update actor and critic networks
         :param memory: memory state (from buffer file)
-        :param writer: name of writer for using Tensorboard
-        :param steps_total: total steps
         :return: results after learning
         """
 
@@ -75,7 +73,7 @@ class MATD3:
         dones = T.tensor(dones).to(device)
         # all these three different actions are needed to calculate the loss function
         all_agents_new_actions = []  # actions according to the target network for the new state
-        all_agents_new_mu_actions = []  # actions according to the regular actor network for the current state
+        # all_agents_new_mu_actions = []  # actions according to the regular actor network for the current state
         old_agents_actions = []  # actions the agent actually took
 
         for agent_idx, agent in enumerate(self.agents):
@@ -85,15 +83,15 @@ class MATD3:
             new_pi = agent.target_actor.forward(new_states)
             all_agents_new_actions.append(new_pi)
             # actions according to the regular actor network for the current state
-            mu_states = T.tensor(actor_states[agent_idx],
-                                 dtype=T.float).to(device)
-            pi = agent.actor.forward(mu_states)
-            all_agents_new_mu_actions.append(pi)
+            # mu_states = T.tensor(actor_states[agent_idx],
+                                 # dtype=T.float).to(device)
+            # pi = agent.actor.forward(mu_states)
+            # all_agents_new_mu_actions.append(pi)
             # actions the agent actually took
             old_agents_actions.append(actions[agent_idx])
 
         new_actions = T.cat([acts for acts in all_agents_new_actions], dim=1)
-        mu = T.cat([acts for acts in all_agents_new_mu_actions], dim=1)
+        # mu = T.cat([acts for acts in all_agents_new_mu_actions], dim=1)
         old_actions = T.cat([acts for acts in old_agents_actions], dim=1)
 
         critic_losses = []
@@ -114,7 +112,7 @@ class MATD3:
 
             # critic optimization
             agent.critic.optimizer.zero_grad()
-            critic_loss.backward()
+            critic_loss.backward(retain_graph=True)
             agent.critic.optimizer.step()
 
             critic_losses.append(critic_loss)
@@ -122,23 +120,20 @@ class MATD3:
 
             # for agent_idx, agent in enumerate(self.agents):
             if steps_total % self.freq == 0 and steps_total > 0:
-                actor_loss = -agent.critic.Q1(states, mu).mean()
+                all_agents_new_mu_actions = []
+                for agent_j, agent in enumerate(self.agents):
+                    mu_states = T.tensor(actor_states[agent_j], dtype=T.float).to(device)
+                    pi = agent.actor.forward(mu_states)
+                    all_agents_new_mu_actions.append(pi)
+                mu = T.cat([acts for acts in all_agents_new_mu_actions], dim=1)
+                # actor loss
+                actor_loss = -T.mean(agent.critic.Q1(states, mu))
+                # actor optimization
+
+                agent.actor.optimizer.zero_grad()
+                actor_loss.backward()
+                agent.actor.optimizer.step()
+                agent.update_network_parameters()
 
                 actor_losses.append(actor_loss)
                 writer.add_scalar('agent_%s' % agent_idx + '_actor_loss', actor_losses[agent_idx], steps_total)
-
-                if agent_idx == 0:
-                    actor_loss_b = actor_loss
-                    agent.actor.optimizer.zero_grad()
-                    actor_loss_b.backward(retain_graph=True)
-                elif agent_idx == self.n_agents - 1:
-                    actor_loss_b += actor_loss
-                    agent.actor.optimizer.zero_grad()
-                    actor_loss_b.backward()
-                    for agent in enumerate(self.agents):
-                        agent.actor.optimizer.step()
-                        agent.update_network_parameters()
-                else:
-                    actor_loss_b += actor_loss
-                    agent.actor.optimizer.zero_grad()
-                    actor_loss_b.backward(retain_graph=True)
