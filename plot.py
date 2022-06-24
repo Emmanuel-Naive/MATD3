@@ -31,7 +31,7 @@ def draw_path_all(num_ships, ships_init, ships_goal, states, x_l, x_h, y_l, y_h,
     ax.set(xlim=(x_l, x_h),
            ylim=(y_l, y_h))
     for i in range(num_ships):
-        plt.scatter(ships_init[i, 0], ships_init[i, 1], 20, marker='s', color=colorset[i], label='initial point')
+        plt.scatter(ships_init[i, 0], ships_init[i, 1], 20, marker='.', color=colorset[i], label='initial point')
         plt.scatter(ships_goal[i, 0], ships_goal[i, 1], 20, marker='x', color=colorset[i], label='goal point')
         # ax.step(states[:, 0, 3 * i], states[:, 0, 3 * i + 1], dashes=[2, 1], alpha=0.6,
         #         color=colorset[i], label='ship{}'.format(i + 1))
@@ -71,6 +71,33 @@ def draw_headings(num_ships, states):
     plt.show()
 
 
+def draw_headings_speed(num_ships, states):
+    speed = np.zeros((num_ships, len(states) - 1))
+    time = np.linspace(0, len(states)-1, len(states)-1)
+    for i in range(num_ships):
+        for j in range(1, len(states)):
+            speed[i, j-1] = states[j, 0, 3 * i + 2] - states[j-1, 0, 3 * i + 2]
+    for i in range(num_ships):
+        plt.figure()
+        plt.xlabel('time(s)')
+        plt.ylabel('Heading angular velocities(deg/s)')
+        # plt.plot(speed[i,:])
+        plt.step(time, speed[i,:])
+        plt.title('Heading angular velocities of ship{index}'.format(index=i + 1))
+    plt.show()
+
+
+def draw_actions(num_ships, acts):
+    time = np.linspace(0, len(acts), len(acts))
+    for i in range(num_ships):
+        plt.figure()
+        plt.xlabel('time(s)')
+        plt.ylabel('Heading angular velocities(deg/s)')
+        plt.step(time, acts[:, i])
+        plt.title('Heading angular velocities of ship{index}'.format(index=i + 1))
+    plt.show()
+
+
 def dra_score(score, weight):
     scalar = scores
     last = scalar[0]
@@ -95,10 +122,13 @@ if __name__ == '__main__':
     # ship_states = np.load(result_dir + '/path_test.npy')
     # rewards = np.load(result_dir + '/rewards_global.npy')
     scores = np.load(result_dir + '/score_history.npy')
+    ship_actions = np.load(result_dir + '/speed_global.npy')
 
     # scenario = '1Ship'
-    # scenario = '2Ships_C2m'
-    scenario = '3Ships_C3H2'
+    scenario = '2Ships_C2m'
+    # scenario = '3Ships_C3H2'
+    # scenario = '4Ships_C4H2O2'
+
     env = get_data(scenario)
 
     x = np.r_[env.ships_init[:, 0], env.ships_goal[:, 0]]
@@ -140,6 +170,8 @@ if __name__ == '__main__':
     # t = t_begin
     # t = time_min
     t = t_last
-    draw_path_all(env.ships_num, env.ships_init, env.ships_goal, ship_states, x_min, x_max, y_min, y_max, time_min)
-    # draw_headings(env.ships_num, states)
+    # draw_path_all(env.ships_num, env.ships_init, env.ships_goal, ship_states, x_min, x_max, y_min, y_max, time_min)
+    # draw_headings(env.ships_num, ship_states)
+    # draw_headings_speed(env.ships_num, ship_states)
+    draw_actions(env.ships_num, ship_actions)
     # dra_score(scores, weight=0.99)
