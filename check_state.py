@@ -27,11 +27,9 @@ class CheckState:
         self.angle_limit = head_limit
 
         self.dis_r = dis_goal
-        # safe distance for checking collision： dis_c, dis_c_h, dis_c_hn
         self.dis_c = ship_max_length / 2 + ship_max_speed * 1
         self.dis_c_h = ship_max_length / 2 + ship_max_speed * 5
         self.dis_c_hn = ship_max_speed * 1
-        # redundant distance for checking CPA, dis_C1 > dis_C2
         self.dis_c1 = self.dis_c * 5
         self.dis_c2 = self.dis_c
 
@@ -169,7 +167,7 @@ class CheckState:
                  reward_coll: reward according to collision states
         """
         reward_coll = np.zeros(self.agents_num)
-        done_coll = False
+        done_coll = [False] * self.agents_num
         dis_buffer = []
         for ship_i in range(self.agents_num):
             for ship_j in range(ship_i + 1, self.agents_num):
@@ -183,15 +181,18 @@ class CheckState:
                                                         next_state[ship_j, 2],
                                                         next_state[ship_i, 0], next_state[ship_i, 1]))
                 if dis_coll < self.dis_c:
-                    done_coll = True
+                    done_coll[ship_i] = True
+                    done_coll[ship_j] = True
                     reward_coll[ship_i] = reward_coll[ship_i] - 1000
                     reward_coll[ship_j] = reward_coll[ship_j] - 1000
                 elif dis_coll < self.dis_c_h:
                     if abs(math.sin(dis_h_a) * dis_coll) <= self.dis_c_hn:
-                        done_coll = True
+                        done_coll[ship_i] = True
+                        done_coll[ship_j] = True
                         reward_coll[ship_i] = reward_coll[ship_i] - 1000
                     if abs(math.sin(dis_h_b) * dis_coll) <= self.dis_c_hn:
-                        done_coll = True
+                        done_coll[ship_i] = True
+                        done_coll[ship_j] = True
                         reward_coll[ship_j] = reward_coll[ship_j] - 1000
 
         dis_buffer = np.array(dis_buffer)
@@ -250,22 +251,22 @@ class CheckState:
                         head[ship_j], self.speeds[ship_j])
                     # get reward according heading angles
                     if (self.rules_table[ship_i, ship_j] == 'HO-GW' or
-                            self.rules_table[ship_i, ship_j] == 'OT-GW' or
                             self.rules_table[ship_i, ship_j] == 'CR-GW'):
                         # Ship steered starboard (negative head_diff)
-                        if head_diff[ship_i] > 0:
+                        reward_CORLEGs[ship_i] -= (head_diff[ship_i] / self.angle_limit) * self.max_reward_COLREGs
+                    elif self.rules_table[ship_i, ship_j] == 'OT-GW':
+                        if abs(head_diff[ship_i]) == 0:
                             reward_CORLEGs[ship_i] -= self.max_reward_COLREGs
-                        elif -0.8 < (head_diff[ship_i] / self.angle_limit) <= 0:
-                            reward_CORLEGs[ship_i] -= (head_diff[ship_i] / self.angle_limit) * self.max_reward_COLREGs
                         else:
-                            reward_CORLEGs[ship_i] += self.max_reward_COLREGs
+                            reward_CORLEGs[ship_i] += (abs(head_diff[ship_i]) / self.angle_limit) \
+                                                      * self.max_reward_COLREGs
                     elif (self.rules_table[ship_i, ship_j] == 'OT-SO' or
                             self.rules_table[ship_i, ship_j] == 'CR-SO'):
                         # stand-on: The smaller heading angles change, the better rewards
-                        if abs(head_diff[ship_i]) < 0.1:
+                        if abs(head_diff[ship_i]) == 0:
                             reward_CORLEGs[ship_i] += self.max_reward_COLREGs
                         else:
-                            reward_CORLEGs[ship_i] -= self.max_reward_COLREGs
+                            reward_CORLEGs[ship_i] -= abs(head_diff[ship_i]) / self.angle_limit * self.max_reward_COLREGs
                     else:
                         ang_to_term = true_bearing(next_state[ship_i, 0], next_state[ship_i, 1],
                                                    self.pos_term[ship_i, 0], self.pos_term[ship_i, 1])
@@ -304,10 +305,10 @@ if __name__ == '__main__':
     # dis_r = 10
     # dis_s = 15
     done = [False] * ships.ships_num
-    # check_env = CheckState(ships.ships_num, ships.ships_pos, ships.ships_term, ships.ships_head, ships.ships_speed,
-                           # dis_r, dis_s)
-    # print(obs_)
-    # reward_term = check_env.check_term(obs_)
-    # reward_done, done = check_env.check_done(obs_, done)
-    # print(reward_term)
-    # print(reward_done)
+    check_env = CheckState(ships.ships_num, ships.ships_pos, ships.ships_term, ships.ships_head, ships.ships_speed,
+                           dis_r, dis_s)
+    print(obs_)
+    reward_term = check_env.check_term(obs_)
+    reward_done, done = check_env.check_done(obs_, done)
+    print(reward_term)
+    print(reward_done)
