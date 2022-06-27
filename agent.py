@@ -45,7 +45,7 @@ class Agent:
                                            chkpt_dir=chkpt_dir, name=self.agent_name+'_target_critic')
 
         self.update_network_parameters(tau=1)
-        self.exploration_noise = OUNoise(self.n_actions,  mu=0, theta=0.15, sigma=0.05)
+        self.exploration_noise = OUNoise(self.n_actions,  mu=0, theta=0.15, sigma=0.15)
 
     def reset_noise(self):
         """
@@ -58,6 +58,7 @@ class Agent:
         """
         :param observation:
         :param exploration: exploration flag
+        :param n_l: limit of noise
         :return:
         """
         # observations need to be converted to a tensor
