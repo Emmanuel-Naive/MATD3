@@ -41,12 +41,12 @@ class CriticNetwork(nn.Module):
 
         self.chkpt_file = os.path.join(chkpt_dir, name)
         # network architecture of q1
-        self.fc1 = nn.Linear(input_dims + n_agents * n_actions, fc1_dims)
+        self.fc1 = nn.Linear(input_dims + 1, fc1_dims)
         self.fc2 = nn.Linear(fc1_dims, fc2_dims)
         self.q1 = nn.Linear(fc2_dims, 1)
 
         # network architecture of q2
-        self.fc3 = nn.Linear(input_dims + n_agents * n_actions, fc1_dims)
+        self.fc3 = nn.Linear(input_dims + 1, fc1_dims)
         self.fc4 = nn.Linear(fc1_dims, fc2_dims)
         self.q2 = nn.Linear(fc2_dims, 1)
         # optimization method
