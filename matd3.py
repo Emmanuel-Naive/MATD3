@@ -4,7 +4,6 @@ Function for building Multi-Agent Deep Deterministic Policy Gradient(MATD3) algo
 Using:
 pytroch: 1.10.2
 """
-import time
 import numpy as np
 import torch as T
 import torch.nn.functional as F
@@ -26,27 +25,25 @@ class MATD3:
         :param beta: learning rate of critic (target) network, default value is 0.01
         :param freq: updating frequency
         """
-        self.agents = []
         self.n_agents = n_agents
         self.n_actions = n_actions
         self.freq = freq
-        for agent_idx in range(self.n_agents):
-            self.agents.append(Agent(actor_dims[agent_idx], critic_dims, n_actions, n_agents, agent_idx,
-                                     fc1=fc1, fc2=fc2, alpha=alpha, beta=beta, chkpt_dir=chkpt_dir))
+        self.agents = [Agent(actor_dims[agent_idx], critic_dims, n_actions, n_agents, agent_idx, fc1=fc1, fc2=fc2,
+                             alpha=alpha, beta=beta, chkpt_dir=chkpt_dir) for agent_idx in range(self.n_agents)]
 
     def save_checkpoint(self):
         print('... saving checkpoint ...')
-        for agent in self.agents:
-            agent.save_models()
+        for agent_idx in range(self.n_agents):
+            self.agents[agent_idx].save_models()
 
     def load_checkpoint(self):
         print('... loading checkpoint ...')
-        for agent in self.agents:
-            agent.load_models()
+        for agent_idx in range(self.n_agents):
+            self.agents[agent_idx].load_models()
 
     def reset_noise(self):
-        for agent_idx, agent in enumerate(self.agents):
-            agent.reset_noise()
+        for agent_idx in range(self.n_agents):
+            self.agents[agent_idx].reset_noise()
 
     def choose_action(self, raw_obs, exploration=True, n_l=0.2):
         actions = []
@@ -59,6 +56,8 @@ class MATD3:
         """
         agents would learn after filling the bitch size of memory, and update actor and critic networks
         :param memory: memory state (from buffer file)
+        :param writer: writer for saving data, which will be used for TensorBoard
+        :param steps_total: total steps(all training episodes)
         :return: results after learning
         """
 
@@ -73,67 +72,54 @@ class MATD3:
         dones = T.tensor(dones).to(device)
         # all these three different actions are needed to calculate the loss function
         all_agents_new_actions = []  # actions according to the target network for the new state
-        # all_agents_new_mu_actions = []  # actions according to the regular actor network for the current state
+        all_agents_new_mu_actions = []  # actions according to the regular actor network for the current state
         old_agents_actions = []  # actions the agent actually took
 
-        for agent_idx, agent in enumerate(self.agents):
+        for agent_idx in range(self.n_agents):
             # actions according to the target network for the new state
             new_states = T.tensor(actor_new_states[agent_idx],
                                   dtype=T.float).to(device)
-            new_pi = agent.target_actor.forward(new_states)
+            new_pi = self.agents[agent_idx].target_actor.forward(new_states)
             all_agents_new_actions.append(new_pi)
             # actions according to the regular actor network for the current state
-            # mu_states = T.tensor(actor_states[agent_idx],
-                                 # dtype=T.float).to(device)
-            # pi = agent.actor.forward(mu_states)
-            # all_agents_new_mu_actions.append(pi)
+            mu_states = T.tensor(actor_states[agent_idx],
+                                 dtype=T.float).to(device)
+            pi = self.agents[agent_idx].actor.forward(mu_states)
+            all_agents_new_mu_actions.append(pi)
             # actions the agent actually took
             old_agents_actions.append(actions[agent_idx])
 
-        new_actions = T.cat([acts for acts in all_agents_new_actions], dim=1)
-        # mu = T.cat([acts for acts in all_agents_new_mu_actions], dim=1)
-        old_actions = T.cat([acts for acts in old_agents_actions], dim=1)
+        new_actions = all_agents_new_actions
+        mu = all_agents_new_mu_actions
+        old_actions = old_agents_actions
 
-        critic_losses = []
-        actor_losses = []
         # handle cost function
-        for agent_idx, agent in enumerate(self.agents):
+        for agent_idx in range(self.n_agents):
             # current Q estimate
-            current_Q1, current_Q2 = agent.critic.forward(states, old_actions)
+            current_Q1, current_Q2 = self.agents[agent_idx].critic.forward(states, old_actions[agent_idx])
             # target Q value
-            with T.no_grad():
-                target_Q1, target_Q2 = agent.target_critic.forward(states_, new_actions)
-                target_Q_min = T.min(target_Q1, target_Q2)
-                # target_Q[dones[:, 0]] = 0.0
-                target_Q = rewards[:, agent_idx] + (agent.gamma * target_Q_min)
+            # with T.no_grad():
+            target_Q1, target_Q2 = self.agents[agent_idx].target_critic.forward(states_, new_actions[agent_idx])
+            target_Q_min = T.min(target_Q1, target_Q2)
+            # target_Q[dones[:, 0]] = 0.0
+            target_Q = rewards[:, agent_idx] + (self.agents[agent_idx].gamma * target_Q_min)
             # critic loss
-            critic_loss = F.mse_loss(current_Q1.float(), target_Q.float()) +\
-                          F.mse_loss(current_Q2.float(), target_Q.float())
+            self.agents[agent_idx].critic_loss = F.mse_loss(current_Q1.float(), target_Q.float()) +\
+                                                 F.mse_loss(current_Q2.float(), target_Q.float())
 
             # critic optimization
-            agent.critic.optimizer.zero_grad()
-            critic_loss.backward(retain_graph=True)
-            agent.critic.optimizer.step()
+            self.agents[agent_idx].critic.optimizer.zero_grad()
+            self.agents[agent_idx].critic_loss.backward()
+            self.agents[agent_idx].critic.optimizer.step()
 
-            critic_losses.append(critic_loss)
-            writer.add_scalar('agent_%s' % agent_idx + '_critic_loss', critic_losses[agent_idx], steps_total)
+            writer.add_scalar('agent_%s' % agent_idx + '_critic_loss', self.agents[agent_idx].critic_loss, steps_total)
 
-            # for agent_idx, agent in enumerate(self.agents):
             if steps_total % self.freq == 0 and steps_total > 0:
-                all_agents_new_mu_actions = []
-                for agent_j, agent in enumerate(self.agents):
-                    mu_states = T.tensor(actor_states[agent_j], dtype=T.float).to(device)
-                    pi = agent.actor.forward(mu_states)
-                    all_agents_new_mu_actions.append(pi)
-                mu = T.cat([acts for acts in all_agents_new_mu_actions], dim=1)
                 # actor loss
-                actor_loss = -T.mean(agent.critic.Q1(states, mu))
+                self.agents[agent_idx].actor_loss = -T.mean(self.agents[agent_idx].critic.Q1(states, mu[agent_idx]))
                 # actor optimization
-
-                agent.actor.optimizer.zero_grad()
-                actor_loss.backward()
-                agent.actor.optimizer.step()
-                agent.update_network_parameters()
-
-                actor_losses.append(actor_loss)
-                writer.add_scalar('agent_%s' % agent_idx + '_actor_loss', actor_losses[agent_idx], steps_total)
+                self.agents[agent_idx].actor.optimizer.zero_grad()
+                self.agents[agent_idx].actor_loss.backward()
+                self.agents[agent_idx].actor.optimizer.step()
+                self.agents[agent_idx].update_network_parameters()
+                writer.add_scalar('agent_%s' % agent_idx + '_actor_loss', self.agents[agent_idx].actor_loss, steps_total)
