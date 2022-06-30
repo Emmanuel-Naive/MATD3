@@ -178,10 +178,10 @@ def colregs_rule(ship1_x, ship1_y, ship1_psi, ship1_u, ship2_x, ship2_y, ship2_p
     if abs(RB_os_ts) < 13 and abs(RB_ts_os) < 13:
         rule = 'HO-GW'
     # Overtaking, give way
-    elif abs(RB_ts_os) > 112.5 and abs(RB_os_ts) < 45 and (ship2_u > (ship1_u * 1.1)):
+    elif abs(RB_ts_os) > 112.5 and abs(RB_os_ts) < 45 and (ship1_u > (ship2_u * 1.1)):
         rule = 'OT-GW'
     # Overtaking, stand on
-    elif abs(RB_os_ts) > 112.5 and abs(RB_ts_os) < 45 and (ship1_u > (ship2_u * 1.1)):
+    elif abs(RB_os_ts) > 112.5 and abs(RB_ts_os) < 45 and (ship2_u > (ship1_u * 1.1)):
         rule = 'OT-SO'
     # Crossing, give way
     elif 0 < RB_os_ts < 112.5 and 10 > RB_ts_os > -112.5:
