@@ -250,18 +250,18 @@ class CheckState:
                         pos[ship_j, 0], pos[ship_j, 1],
                         head[ship_j], self.speeds[ship_j])
                     # get reward according heading angles
-                    if (self.rules_table[ship_i, ship_j] == 'HO-GW' or
-                            self.rules_table[ship_i, ship_j] == 'CR-GW'):
+                    if (self.rules_table[ship_i, ship_j] == 'HO-G' or
+                            self.rules_table[ship_i, ship_j] == 'CR-G'):
                         # Ship steered starboard (negative head_diff)
                         reward_CORLEGs[ship_i] -= (head_diff[ship_i] / self.angle_limit) * self.max_reward_COLREGs
-                    elif self.rules_table[ship_i, ship_j] == 'OT-GW':
+                    elif self.rules_table[ship_i, ship_j] == 'OT-G':
                         if abs(head_diff[ship_i]) == 0:
                             reward_CORLEGs[ship_i] -= self.max_reward_COLREGs
                         else:
                             reward_CORLEGs[ship_i] += (abs(head_diff[ship_i]) / self.angle_limit) \
                                                       * self.max_reward_COLREGs
-                    elif (self.rules_table[ship_i, ship_j] == 'OT-SO' or
-                            self.rules_table[ship_i, ship_j] == 'CR-SO'):
+                    elif (self.rules_table[ship_i, ship_j] == 'OT-S' or
+                            self.rules_table[ship_i, ship_j] == 'CR-S'):
                         # stand-on: The smaller heading angles change, the better rewards
                         if abs(head_diff[ship_i]) == 0:
                             reward_CORLEGs[ship_i] += self.max_reward_COLREGs
