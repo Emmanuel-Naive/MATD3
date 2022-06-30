@@ -28,7 +28,7 @@ def animate2(i):
     time_text.set_text(time_template % (i * dt))
     if i != 0:
         dis_info = dis_infos[i]
-        dis = round(dis_info[0, 0],1)
+        dis = round(dis_info[0, 0], 1)
         ship1 = int(dis_info[0, 1] + 1)
         ship2 = int(dis_info[0, 2] + 1)
         dis_text.set_text(dis_template.format(dis=dis, ship1=ship1, ship2=ship2))
@@ -47,11 +47,14 @@ def animate2(i):
 
 if __name__ == '__main__':
     result_dir = os.path.dirname(os.path.realpath(__file__)) + '\SavedResult'
+    # states = np.load(result_dir + '/path_first.npy')
     states = np.load(result_dir + '/path_global.npy')
     # states = np.load(result_dir + '/path_last.npy')
-    # states = np.load(result_dir + '/path_test.npy')
 
-    scenario = '2Ships_H2'
+    # scenario = '1ShipM'
+    scenario = '2Ships_C2'
+    # scenario = '3Ships_C3H2'
+    # scenario = '4Ships_C4H2O2'
 
     env = get_data(scenario)
     if env.ships_num == 1:
@@ -98,7 +101,8 @@ if __name__ == '__main__':
         headings.append(ax.arrow([], [], [], []))
 
         plt.scatter(env.ships_goal[i, 0], env.ships_goal[i, 1], 20, marker='x', color=colorset[i],
-                    label='ship{index}(S{ind})'.format(index=i+1, ind=i+1))
+                    label='Ship{index}(S{ind})'.format(index=i+1, ind=i+1))
+        plt.scatter(env.ships_init[i, 0], env.ships_init[i, 1], 20, marker='.', color=colorset[i])
     time_template = 'time = %.1fs'
     time_text = ax.text(0.05, 0.9, '', transform=ax.transAxes)
     if env.ships_num == 1:
