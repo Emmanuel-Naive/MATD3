@@ -60,7 +60,6 @@ class MATD3:
         :param steps_total: total steps(all training episodes)
         :return: results after learning
         """
-
         actor_states, states, actions, rewards, actor_new_states, states_, dones = memory.sample_buffer()
 
         device = self.agents[0].actor.device
