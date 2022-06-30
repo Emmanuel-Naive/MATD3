@@ -35,6 +35,8 @@ class Agent:
         self.tau = tau
         self.n_actions = n_actions
         self.agent_name = 'agent_%s' % agent_idx
+        self.critic_loss = []
+        self.actor_loss = []
         self.actor = ActorNetwork(alpha, actor_dims, fc1, fc2, n_actions, 
                                   chkpt_dir=chkpt_dir,  name=self.agent_name+'_actor')
         self.critic = CriticNetwork(beta, critic_dims, fc1, fc2, n_agents, n_actions,
@@ -45,7 +47,7 @@ class Agent:
                                            chkpt_dir=chkpt_dir, name=self.agent_name+'_target_critic')
 
         self.update_network_parameters(tau=1)
-        self.exploration_noise = OUNoise(self.n_actions,  mu=0, theta=0.15, sigma=0.15)
+        self.exploration_noise = OUNoise(self.n_actions,  mu=0, theta=0.1, sigma=0.1)
 
     def reset_noise(self):
         """
