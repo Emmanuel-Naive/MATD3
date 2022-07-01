@@ -47,11 +47,11 @@ class CheckState:
                 for ship_j in range(self.agents_num):
                     self.rules_table[ship_i, ship_j] = 'Null'
 
-        self.max_reward_term = 5
+        self.max_reward_term = 20
         self.reward_alive = 1
         self.reward_max = self.max_reward_term + self.reward_alive
         if num_agent > 1:
-            self.max_reward_CPA = 5
+            self.max_reward_CPA = 10
             self.max_reward_COLREGs = 50
             self.reward_max = self.reward_max + self.max_reward_CPA + self.max_reward_COLREGs
 
@@ -60,7 +60,8 @@ class CheckState:
         Function for checking goal states
         :param next_state:
         :param done_term: flag of done state
-        :return: reward_done: reward according to done states
+        :return: reward_done and done_term states
+                 reward_done: reward according to done states
         """
         reward_done = np.zeros(self.agents_num)
         for ship_idx in range(self.agents_num):
@@ -169,6 +170,7 @@ class CheckState:
         reward_coll = np.zeros(self.agents_num)
         done_coll = [False] * self.agents_num
         dis_buffer = []
+
         for ship_i in range(self.agents_num):
             for ship_j in range(ship_i + 1, self.agents_num):
                 dis_coll = euc_dist(next_state[ship_i, 0], next_state[ship_j, 0],
@@ -196,7 +198,6 @@ class CheckState:
                         reward_coll[ship_j] = reward_coll[ship_j] - 1000
 
         dis_buffer = np.array(dis_buffer)
-        dis_buffer = np.array(dis_buffer)
         dis_min = np.min(dis_buffer[:, 0])
         dis_min_index = np.where(dis_buffer[:, 0] == dis_min)
         dis_closest = dis_buffer[dis_min_index[0], :]
@@ -206,7 +207,7 @@ class CheckState:
         """
         Function for checking CPA
         :param next_state:
-        :return:
+        :return: reward_CPA: reward according to DCPA
         """
         reward_CPA = np.zeros(self.agents_num)
         for ship_i in range(self.agents_num):
@@ -238,9 +239,9 @@ class CheckState:
         head_ = next_state[:, 2]
         head_diff = warp_to_180(head_ - head, self.agents_num)
         reward_CORLEGs = np.zeros(self.agents_num)
+        # update the CORLEGs table
         for ship_i in range(self.agents_num):
             for ship_j in range(self.agents_num):
-                # update the CORLEGs table
                 if ship_i == ship_j:
                     self.rules_table[ship_i, ship_j] = 'Null'
                 else:
@@ -249,6 +250,10 @@ class CheckState:
                         head[ship_i], self.speeds[ship_i],
                         pos[ship_j, 0], pos[ship_j, 1],
                         head[ship_j], self.speeds[ship_j])
+        # Check this CORLEGs table, return rewards
+        for ship_i in range(self.agents_num):
+            for ship_j in range(self.agents_num):
+                if ship_i != ship_j:
                     # get reward according heading angles
                     if (self.rules_table[ship_i, ship_j] == 'HO-G' or
                             self.rules_table[ship_i, ship_j] == 'CR-G'):
@@ -275,11 +280,11 @@ class CheckState:
                             dif_ang -= 360
 
                         if dif_ang < 5:
-                            reward_CORLEGs[ship_i] = self.max_reward_COLREGs
+                            reward_CORLEGs[ship_i] += self.max_reward_COLREGs
                         elif 5 <= dif_ang < 30:
-                            reward_CORLEGs[ship_i] = 0
+                            reward_CORLEGs[ship_i] += 0
                         else:
-                            reward_CORLEGs[ship_i] = -self.max_reward_COLREGs
+                            reward_CORLEGs[ship_i] -= self.max_reward_COLREGs
         return reward_CORLEGs, self.rules_table
 
 
