@@ -77,6 +77,7 @@ if __name__ == '__main__':
     writer_dir = os.path.dirname(os.path.realpath(__file__)) + '\SavedLoss'
     delete_files(writer_dir)
     if train_model:
+        # Train model
         for i in range(steps_games + 1):
             obs = env.reset()
             # limits on ships' heading angles
@@ -238,6 +239,7 @@ if __name__ == '__main__':
             np.save(result_dir + '/info_closest_all_last.npy', dis_info)
 
     else:
+        # Use current model to test
         marl_agents.load_checkpoint()
 
         obs = env.reset()
@@ -255,6 +257,7 @@ if __name__ == '__main__':
         done_goal = env.ships_done_term
 
         Exploration = False
+        noise_l = 0.2
 
         path_test = []
         path_test.append(obs.reshape(1, -1))
@@ -265,7 +268,7 @@ if __name__ == '__main__':
         t_closest = 0
         dis_info = []
         while not done_reset:
-            actions = marl_agents.choose_action(n_obs, Exploration)
+            actions = marl_agents.choose_action(n_obs, Exploration, noise_l)
             # print(actions)
             # list type, example: [-1.0, 1.0]
             obs_ = env.step(actions).copy()
@@ -274,8 +277,8 @@ if __name__ == '__main__':
             # For local observation problems, observations are not equal to states.
             # For global observation problems, observations are equal to states.
             # For simplification, just set: observations = states.
-            state = obs.reshape(1, -1)
-            state_ = obs_.reshape(1, -1)
+            state = obs.reshape(1, -1).copy()
+            state_ = obs_.reshape(1, -1).copy()
 
             # reward
             reward_done, done_goal = check_env.check_done(obs_, done_goal)
@@ -296,33 +299,17 @@ if __name__ == '__main__':
             else:
                 if step_episode == 0:
                     dis_closest = dis_closest_local[0]
-                elif dis_closest < dis_closest_local[0]:
+                elif dis_closest > dis_closest_local[0]:
                     dis_closest = dis_closest_local[0]
                     t_closest = step_episode
 
             if step_episode >= steps_max:
                 done_reset = True
-            # if all(done_goal):
-            # if i == 0:
-            #     print(i, state, done_goal)
             if any(done_goal):
                 done_reset = True
-            # if done_coll:
-            #     done_reset = True
-
-            # data normalization
-            n_reward = reward.copy()
-            n_obs_ = obs_.copy()
-            for ship_idx in range(env.ships_num):
-                n_obs_[ship_idx, 0] = norm_data.nmlz_pos(obs_[ship_idx, 0],
-                                                         env.ships_x_min[ship_idx], env.ships_x_max[ship_idx])
-                n_obs_[ship_idx, 1] = norm_data.nmlz_pos(obs_[ship_idx, 1],
-                                                         env.ships_y_min[ship_idx], env.ships_y_max[ship_idx])
-                n_obs_[ship_idx, 2] = norm_data.nmlz_ang(obs_[ship_idx, 2])
-
-                n_reward[ship_idx] = norm_data.nmlz_r(reward[ship_idx], reward_max)
-            n_state = n_obs.reshape(1, -1)
-            n_state_ = n_obs_.reshape(1, -1)
+            if env.ships_num > 1:
+                if any(done_coll):
+                    done_reset = True
 
             obs = obs_.copy()
             path_test.append(state)
