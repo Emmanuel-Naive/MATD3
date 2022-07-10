@@ -40,17 +40,17 @@ class OUNoise:
 
 class GaussNoise:
     def __init__(self, action_dimension, mu=0, sigma=0.2):
-        self.action_dimension = action_dimension
-        self.mu = mu
-        self.sigma = sigma
-
-    def noise(self):
         """
         Create Gauss white noise
         :param action_dimension: number of actions
         :param mu: mean value of OU noise, default value is 0
         :param sigma: standard deviation of OU noise, default value is 0.2
         """
+        self.action_dimension = action_dimension
+        self.mu = mu
+        self.sigma = sigma
+
+    def noise(self):
         noises = []
         for i in range(self.action_dimension):
             noise = random.gauss(self.mu, self.sigma)
