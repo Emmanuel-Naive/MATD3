@@ -8,9 +8,6 @@ import numpy as np
 
 
 class MultiAgentReplayBuffer:
-    """
-    Replay Buffer for Multi agents
-    """
     def __init__(self, max_size, actor_dims, critic_dims,
                  n_agents, n_actions, batch_size):
         """
@@ -77,13 +74,13 @@ class MultiAgentReplayBuffer:
     def sample_buffer(self):
         """
         :return:  appropriate memories
-            actor_states: individual arrays of states
-            states: flattened combination of state arrays
-            actions: flattened combination of action arrays
-            rewards: individual arrays of rewards
-            actor_new_states: flattened combination of new action arrays
-            states_: individual arrays of new states
-            terminal: individual arrays of terminal flags
+                  actor_states: individual arrays of states
+                  states: flattened combination of state arrays
+                  actions: flattened combination of action arrays
+                  rewards: individual arrays of rewards
+                  actor_new_states: flattened combination of new action arrays
+                  states_: individual arrays of new states
+                  terminal: individual arrays of terminal flags
         """
         max_mem = min(self.mem_cntr, self.mem_size)  # current memory size
         # memories could not be selected multiple times (replace=False)
@@ -106,8 +103,9 @@ class MultiAgentReplayBuffer:
 
     def ready(self):
         """
+        check memory state
         :return: memory state
-            Ture:  fill up the batch size
+                 Ture:  fill up the batch size
         """
         if self.mem_cntr >= self.batch_size:
             return True
