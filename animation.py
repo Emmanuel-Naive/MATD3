@@ -8,8 +8,15 @@ ffmpeg: 2.7.0
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from functions import *
+from noise import *
+
 
 def animate1(i):
+    """
+    animation for single-ship
+    :param i:
+    :return:
+    """
     time_text.set_text(time_template % (i * dt))
 
     for n in range(env.ships_num):
@@ -24,13 +31,31 @@ def animate1(i):
                                    head_width=500, head_length=500, fc=colorset[n], ec=colorset[n])
     # return time_text, ship_markers, past_trajectory
 
+
 def animate2(i):
+    """
+    animation for multi-ship
+    :param i:
+    :return:
+    """
     time_text.set_text(time_template % (i * dt))
     if i != 0:
         dis_info = dis_infos[i]
         dis = round(dis_info[0, 0], 1)
         ship1 = int(dis_info[0, 1] + 1)
         ship2 = int(dis_info[0, 2] + 1)
+
+        # dis_shortest = 3000
+        # for j in range(env.ships_num):
+        #     for k in range(j + 1, env.ships_num):
+        #         dis_ = euc_dist(states[i, 0, 3 * j], states[i, 0, 3 * k],
+        #                         states[i, 0, 3 * j + 1], states[i, 0, 3 * k + 1])
+        #         if dis_ < dis_shortest:
+        #             dis_shortest = dis_
+        #             ship1 = j + 1
+        #             ship2 = k + 1
+        # dis = round(dis_shortest, 3)
+
         dis_text.set_text(dis_template.format(dis=dis, ship1=ship1, ship2=ship2))
     for n in range(env.ships_num):
         if i > 0:
@@ -52,9 +77,9 @@ if __name__ == '__main__':
     # states = np.load(result_dir + '/path_last.npy')
 
     # scenario = '1ShipM'
-    scenario = '2Ships_C2'
-    # scenario = '3Ships_C3H2'
-    # scenario = '4Ships_C4H2O2'
+    # scenario = '2Ships_O2'
+    # scenario = '3Ships_H3O2m'
+    scenario = '4Ships_C4H4'
 
     env = get_data(scenario)
     if env.ships_num == 1:
@@ -62,6 +87,11 @@ if __name__ == '__main__':
     else:
         dis_infos = np.load(result_dir + '/info_closest_all_global.npy')
         # dis_infos = np.load(result_dir + '/info_closest_all_last.npy')
+
+    NED = True
+    # NED = False
+    if NED:
+        states = XoYtoNED(states)
 
     dt = 1
     t_step = len(states)
@@ -95,7 +125,12 @@ if __name__ == '__main__':
     fig = plt.figure()
     ax = fig.add_subplot(autoscale_on=False, xlim=(x_min, x_max), ylim=(y_min, y_max))
     ax.set_aspect('equal')
-
+    if NED:
+        plt.xlabel('East')
+        plt.ylabel('North')
+    else:
+        plt.xlabel('Position X')
+        plt.ylabel('Position Y')
     for i in range(env.ships_num):
         past_trajectory.append(ax.plot([], [], c=colorset[i], dashes=[8, 4], alpha=0.8)[0])
         headings.append(ax.arrow([], [], [], []))
