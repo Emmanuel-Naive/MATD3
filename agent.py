@@ -5,8 +5,8 @@ However, for simplifying, all networks are built by the same structure and param
 Only learning rates are given by two different variables (alpha and beta).
 
 Using:
-pytroch: 1.10.2
 numpy: 1.21.5
+pytroch: 1.10.2
 """
 import numpy as np
 import torch as T
