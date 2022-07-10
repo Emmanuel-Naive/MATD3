@@ -5,14 +5,10 @@ from functions import *
 
 
 class MultiAgentEnv:
-    """
-    Environment for multi agents
-    """
-
     def __init__(self, scenario_name):
         """
         :param scenario_name: the file name, str
-            example: scenario_name = '2Ships_Cross'
+                  example: scenario_name = '2Ships_Cross'
         """
         self.case = get_data(scenario_name)
 
