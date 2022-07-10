@@ -20,6 +20,11 @@ import torch.optim as optim
 
 
 def init_weights(layer):
+    """
+    Initialize weights of networks (-0.001, 0.001)
+    :param layer:
+    :return:
+    """
     if type(layer) == nn.Linear:
         nn.init.uniform_(layer.weight, a=-0.001, b=0.001)
         nn.init.constant_(layer.bias, 0)
