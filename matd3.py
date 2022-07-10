@@ -1,7 +1,8 @@
 """
-Function for building Multi-Agent Deep Deterministic Policy Gradient(MATD3) algorithm.
+Function for building Multi-Agent Twin Delayed Deep Deterministic Policy Gradient(MATD3) algorithm.
 
 Using:
+numpy: 1.21.5
 pytroch: 1.10.2
 """
 import numpy as np
@@ -19,11 +20,11 @@ class MATD3:
         :param critic_dims: number of dimensions for the critic
         :param n_agents: number of agents
         :param n_actions: number of actions
+        :param freq: updating frequency, default value is 100
         :param fc1: number of dimensions for first layer, default value is 128
         :param fc2: number of dimensions for second layer, default value is 64
         :param alpha: learning rate of actor (target) network, default value is 0.01
         :param beta: learning rate of critic (target) network, default value is 0.01
-        :param freq: updating frequency
         """
         self.n_agents = n_agents
         self.n_actions = n_actions
@@ -46,6 +47,13 @@ class MATD3:
             self.agents[agent_idx].reset_noise()
 
     def choose_action(self, raw_obs, exploration=True, n_l=0.2):
+        """
+        function for choosing action
+        :param raw_obs: raw observation
+        :param exploration: exploration state flag
+        :param n_l: limitation for noise processes, default value is 0.2
+        :return: agents' actions
+        """
         actions = []
         for agent_idx, agent in enumerate(self.agents):
             action = agent.choose_action(raw_obs[agent_idx], exploration, n_l)
@@ -120,5 +128,7 @@ class MATD3:
                 self.agents[agent_idx].actor.optimizer.zero_grad()
                 self.agents[agent_idx].actor_loss.backward()
                 self.agents[agent_idx].actor.optimizer.step()
+                # update parameters
                 self.agents[agent_idx].update_network_parameters()
+
                 writer.add_scalar('agent_%s' % agent_idx + '_actor_loss', self.agents[agent_idx].actor_loss, steps_total)
