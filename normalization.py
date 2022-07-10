@@ -14,7 +14,7 @@ class NormalizeData:
         :param pos_c: the given position
         :param pos_min: the minimum value of initial and goal positions
         :param pos_max: the maximum value of initial and goal positions
-        :return:
+        :return: positions after normalizing
         """
         if pos_min == pos_max:
             n_pos_c = 2 * (pos_c - pos_min) / self.dis_max
@@ -27,7 +27,7 @@ class NormalizeData:
         Function for normalizing the given heading angle to the interval [-1, 1]
             e.g.: if angle_c = 180, return: n_ang_c = 0
         :param angle_c: the interval [0, 360]
-        :return:
+        :return: headings after normalizing
         """
         n_ang_c = (180 - angle_c) / 180
         return n_ang_c
@@ -38,7 +38,7 @@ class NormalizeData:
             e.g.: if r_c = 0, return: n_r_c = 0
         :param r_c: the given reward
         :param r_max: the maximum reward
-        :return:
+        :return: rewards after normalizing
         """
         n_r_c = r_c / r_max
         return n_r_c
