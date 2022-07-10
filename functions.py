@@ -43,8 +43,8 @@ def delete_files(dir_path):
 def wrap_to_pi(angle):
     """
     wraps the angle to [-pi,pi)
-    :param angle: (radians)
-    :return:
+    :param angle:
+    :return: angle(radians)
     """
     res = math.fmod(angle + 2 * math.pi, 2 * math.pi)
     if res >= math.pi:
@@ -55,8 +55,8 @@ def wrap_to_pi(angle):
 def wrap_to_2pi(angle):
     """
     wraps the angle to [0,2*pi)
-    :param angle: (radians)
-    :return:
+    :param angle:
+    :return: angle(radians)
     """
     res = math.fmod(angle + 2 * math.pi, 2 * math.pi)
     return res
@@ -67,7 +67,7 @@ def warp_to_180(degrees, n):
     wraps angles to [-180,180)
     :param degrees:
     :param n: number of angles(degrees)
-    :return:
+    :return: angles(degrees)
     """
     res = np.zeros(n)
     for i in range(n):
@@ -84,9 +84,9 @@ def warp_to_180(degrees, n):
 def warp_to_360(degrees, n):
     """
     wraps the angle to [0,360)
-    :param degrees: number of angles(degrees)
-    :param n:
-    :return:
+    :param degrees:
+    :param n: number of angles(degrees)
+    :return: angles(degrees)
     """
     res = np.zeros(n)
     for i in range(n):
@@ -107,7 +107,7 @@ def euc_dist(x_1, x_2, y_1, y_2):
     :param y_1:
     :param x_2:
     :param y_2:
-    :return:
+    :return: the Euclidean distance
     """
     distance = math.sqrt((x_1 - x_2)**2 + (y_1 - y_2)**2)
     return distance
@@ -178,10 +178,10 @@ def colregs_rule(ship1_x, ship1_y, ship1_psi, ship1_u, ship2_x, ship2_y, ship2_p
     if abs(RB_os_ts) < 13 and abs(RB_ts_os) < 13:
         rule = 'HO-GW'
     # Overtaking, give way
-    elif abs(RB_ts_os) > 112.5 and abs(RB_os_ts) < 45 and (ship1_u > (ship2_u * 1.1)):
+    elif abs(RB_ts_os) > 112.5 and abs(RB_os_ts) < 45 and (ship2_u > (ship1_u * 1.1)):
         rule = 'OT-GW'
     # Overtaking, stand on
-    elif abs(RB_os_ts) > 112.5 and abs(RB_ts_os) < 45 and (ship2_u > (ship1_u * 1.1)):
+    elif abs(RB_os_ts) > 112.5 and abs(RB_ts_os) < 45 and (ship1_u > (ship2_u * 1.1)):
         rule = 'OT-SO'
     # Crossing, give way
     elif 0 < RB_os_ts < 112.5 and 10 > RB_ts_os > -112.5:
@@ -196,6 +196,7 @@ def colregs_rule(ship1_x, ship1_y, ship1_psi, ship1_u, ship2_x, ship2_y, ship2_p
 
 def CPA(x1, x2, psi1, v1, y1, y2, psi2, v2):
     """
+    check CPA
     :param x1:
     :param x2:
     :param psi1: value in degrees
@@ -204,7 +205,7 @@ def CPA(x1, x2, psi1, v1, y1, y2, psi2, v2):
     :param y2:
     :param psi2: value in degrees
     :param v2:
-    :return:
+    :return: DCPA, TCPA
     """
     # alpha_r (True bearing of the TS)
     alpha_r = true_bearing(x1, y1, x2, y2)
@@ -231,6 +232,45 @@ def CPA(x1, x2, psi1, v1, y1, y2, psi2, v2):
         TCPA = (D_r * math.cos(beta)) / abs(U_r)
     return DCPA, TCPA
 
+
+def XoYtoNED(states):
+    """
+    Convert XoY(ENU) coordinate system to NED coordinate system
+    Notice: Python will calculate and plot based on XoY coordinate system.
+            A simple method is that using XoY coordinate system in coding,
+            and only using NED coordinate system to convert ships' headings.
+    :param states: states in XoY(ENU) coordinate system
+    :return: states(NED)
+    """
+    x, y, z = states.shape
+    states_ = states.copy()
+    for i in range(int(z/3)):
+        # states_[:, 0, 3 * i] = states[:, 0, 3 * i + 1]
+        # states_[:, 0, 3 * i + 1] = states[:, 0, 3 * i]
+        states_[:, 0, 3 * i + 2] = -states[:, 0, 3 * i + 2] + 90
+        states_[:, 0, 3 * i + 2] = warp_to_360(states_[:, 0, 3 * i + 2], x)
+    return states_
+
+
+def NEDtoXoY(states):
+    """
+    Convert NED coordinate system to XoY(ENU) coordinate system
+    Notice: Python will calculate and plot based on XoY coordinate system.
+            A simple method is that using XoY coordinate system in coding,
+            and only using NED coordinate system to convert ships' headings.
+    :param states: states in XoY(ENU) coordinate system
+    :return: states(XoY)
+    """
+    x, y, z = states.shape
+    states_ = states.copy()
+    for i in range(int(z/3)):
+        # states_[:, 0, 3 * i] = states[:, 0, 3 * i + 1]
+        # states_[:, 0, 3 * i + 1] = states[:, 0, 3 * i]
+        states_[:, 0, 3 * i + 2] = -states[:, 0, 3 * i + 2] + 90
+        states_[:, 0, 3 * i + 2] = warp_to_360(states_[:, 0, 3 * i + 2], x)
+    return states_
+
+
 if __name__ == '__main__':
     # ship1_x = -5000
     # ship1_y = 0
@@ -250,17 +290,37 @@ if __name__ == '__main__':
     ship2_psi = 0
     ship2_u = 30
 
-    print(true_bearing(ship1_x, ship1_y, ship2_x, ship2_y))
-    print(true_bearing(ship2_x, ship2_y, ship1_x, ship1_y))
-    print(relative_bearing(ship1_x, ship1_y, ship1_psi, ship2_x, ship2_y))
-    print(relative_bearing(ship2_x, ship2_y, ship2_psi, ship1_x, ship1_y))
-    print(colregs_rule(ship1_x, ship1_y, ship1_psi, ship1_u, ship2_x, ship2_y, ship2_psi, ship2_u))
-    print(colregs_rule(ship2_x, ship2_y, ship2_psi, ship2_u, ship1_x, ship1_y, ship1_psi, ship1_u))
-
-    # ship2_psi = 210
+    # print(true_bearing(ship1_x, ship1_y, ship2_x, ship2_y))
+    # print(true_bearing(ship2_x, ship2_y, ship1_x, ship1_y))
     # print(relative_bearing(ship1_x, ship1_y, ship1_psi, ship2_x, ship2_y))
     # print(relative_bearing(ship2_x, ship2_y, ship2_psi, ship1_x, ship1_y))
     # print(colregs_rule(ship1_x, ship1_y, ship1_psi, ship1_u, ship2_x, ship2_y, ship2_psi, ship2_u))
     # print(colregs_rule(ship2_x, ship2_y, ship2_psi, ship2_u, ship1_x, ship1_y, ship1_psi, ship1_u))
+    #
+    # # ship2_psi = 210
+    # # print(relative_bearing(ship1_x, ship1_y, ship1_psi, ship2_x, ship2_y))
+    # # print(relative_bearing(ship2_x, ship2_y, ship2_psi, ship1_x, ship1_y))
+    # # print(colregs_rule(ship1_x, ship1_y, ship1_psi, ship1_u, ship2_x, ship2_y, ship2_psi, ship2_u))
+    # # print(colregs_rule(ship2_x, ship2_y, ship2_psi, ship2_u, ship1_x, ship1_y, ship1_psi, ship1_u))
+    #
+    # print(CPA(ship1_x, ship1_y, ship1_psi, ship2_u, ship2_x, ship2_y, ship2_psi, ship2_u))
 
-    print(CPA(ship1_x, ship1_y, ship1_psi, ship2_u, ship2_x, ship2_y, ship2_psi, ship2_u))
+    # x = [[1, 2, 3], [4, 5, 6]]
+    # x = np.array(x)
+    # print(len(x))
+    # print(len(x[0]))
+
+    result_dir = os.path.dirname(os.path.realpath(__file__)) + '\SavedResult'
+    ship_states = np.load(result_dir + '/path_global.npy')
+    scenario = '4Ships_C4H3O2'
+    env = get_data(scenario)
+
+    print(ship_states[0, 0, :])
+    ship_states_ = XoYtoNED(ship_states)
+    print(ship_states_[0, 0, :])
+    print(ship_states[0, 0, :])
+
+    ship_states = NEDtoXoY(ship_states_)
+    print(ship_states_[0, 0, :])
+    print(ship_states[0, 0, :])
+
