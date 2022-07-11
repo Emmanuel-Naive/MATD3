@@ -19,8 +19,12 @@ This code is modified based on the privious MADDPG algorithm:https://github.com/
   **Notice:** the initial data is given based on the XoY coordinate system
 ## Some results:
   1ShipM: https://user-images.githubusercontent.com/55374976/178238690-7bc441cd-246f-48e2-93e8-bf0a57f53bb6.mp4  
-  2Ships_C2: https://user-images.githubusercontent.com/55374976/178238745-945a4c8c-0387-4c6e-8705-582052eaa9f0.mp4
-  2Ships_H2: https://user-images.githubusercontent.com/55374976/178238743-52e98bc4-4d64-4d7c-9234-011839d61cad.mp4
+  2Ships_C2: https://user-images.githubusercontent.com/55374976/178238745-945a4c8c-0387-4c6e-8705-582052eaa9f0.mp4  
+  2Ships_H2: https://user-images.githubusercontent.com/55374976/178238743-52e98bc4-4d64-4d7c-9234-011839d61cad.mp4  
+  2Ships_O2_Right: https://user-images.githubusercontent.com/55374976/178238736-4d851554-a85d-44b0-a0a7-1bba7a1c21dd.mp4  
+  2Ships_O2_Left: [https://user-images.githubusercontent.com/55374976/178238736-4d851554-a85d-44b0-a0a7-1bba7a1c21dd.mp4](https://user-images.githubusercontent.com/55374976/178238740-ddfb4cca-5592-49a3-aa3d-3aa9f527ff4b.mp4
+)
+
 ## Known issues:
   1. These codes sometimes could only work on 1 core of CPU, but I am not sure that parallel processing could be used in deep reinforcement learning because data in each episode can not be processed individually. However, data for each vessel may be able to be processed individually.
       Here are some tests on different computer:  
