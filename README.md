@@ -17,7 +17,9 @@ This code is modified based on the privious MADDPG algorithm:https://github.com/
 ## Scenarios illustration
   The illustration of scenarios could be found in:https://github.com/Emmanuel-Naive/MATD3/blob/main/Scenarios/Scenario_illustration.ipynb  
   **Notice:** the initial data is given based on the XoY coordinate system
-  
+## Some results:
+  1 ShipM
+  https://user-images.githubusercontent.com/55374976/178238690-7bc441cd-246f-48e2-93e8-bf0a57f53bb6.mp4
 ## Known issues:
   1. These codes sometimes could only work on 1 core of CPU, but I am not sure that parallel processing could be used in deep reinforcement learning because data in each episode can not be processed individually. However, data for each vessel may be able to be processed individually.
       Here are some tests on different computer:  
