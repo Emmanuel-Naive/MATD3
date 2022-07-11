@@ -22,8 +22,12 @@ This code is modified based on the privious MADDPG algorithm:https://github.com/
   2Ships_C2: https://user-images.githubusercontent.com/55374976/178238745-945a4c8c-0387-4c6e-8705-582052eaa9f0.mp4  
   2Ships_H2: https://user-images.githubusercontent.com/55374976/178238743-52e98bc4-4d64-4d7c-9234-011839d61cad.mp4  
   2Ships_O2_Right: https://user-images.githubusercontent.com/55374976/178238736-4d851554-a85d-44b0-a0a7-1bba7a1c21dd.mp4  
-  2Ships_O2_Left: [https://user-images.githubusercontent.com/55374976/178238736-4d851554-a85d-44b0-a0a7-1bba7a1c21dd.mp4](https://user-images.githubusercontent.com/55374976/178238740-ddfb4cca-5592-49a3-aa3d-3aa9f527ff4b.mp4
-)
+  2Ships_O2_Left: https://user-images.githubusercontent.com/55374976/178238740-ddfb4cca-5592-49a3-aa3d-3aa9f527ff4b.mp4
+  3Ships_C3H2: https://user-images.githubusercontent.com/55374976/178238783-67965cbe-9130-4404-9cc3-6175900fc739.mp4  
+  3Ships_C3O2: https://user-images.githubusercontent.com/55374976/178238786-36ede5d5-90d5-47c2-b9d3-572eaaf90839.mp4  
+  3Ships_H3O2: https://user-images.githubusercontent.com/55374976/178238792-bacca074-14c8-49f0-bbb8-e6d698bac7cc.mp4  
+  4Ships_C4H3O2: https://user-images.githubusercontent.com/55374976/178238794-a3b923b2-ddde-4284-8b03-f04c099771d8.mp4  
+  4Ships_C4H4: https://user-images.githubusercontent.com/55374976/178238797-4d39941c-0ffa-4710-b2c0-015b96cb8b29.mp4  
 
 ## Known issues:
   1. These codes sometimes could only work on 1 core of CPU, but I am not sure that parallel processing could be used in deep reinforcement learning because data in each episode can not be processed individually. However, data for each vessel may be able to be processed individually.
