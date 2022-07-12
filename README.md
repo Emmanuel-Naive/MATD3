@@ -20,17 +20,17 @@ This code is modified based on the privious MADDPG algorithm:https://github.com/
 ## Some results:
   Videos could be found in:https://github.com/Emmanuel-Naive/MATD3/issues/2  
   Or click the url link for wataching.  
-  1ShipM:
-  2Ships_C2:  
-  2Ships_H2: 
-  2Ships_O2_Right:  
-  2Ships_O2_Left: 
-  3Ships_C3H2:  
-  3Ships_C3O2: 
-  3Ships_H3O2: 
-  4Ships_C4H3O2:
-  4Ships_C4H4: 
-
+  
+  1ShipM: https://user-images.githubusercontent.com/55374976/178543309-ceeac31a-345e-4de0-ad66-9caebc4bb0ac.mp4  
+  2Ships_H2: https://user-images.githubusercontent.com/55374976/178543347-816bbda8-b8ef-45b0-9246-de11124b6761.mp4  
+  2Ships_C2: https://user-images.githubusercontent.com/55374976/178543349-22b1fc0d-52f3-48eb-ba9d-79673cdb8a23.mp4  
+  2Ships_O2_Right: https://user-images.githubusercontent.com/55374976/178543339-38dc1018-7c63-48f2-b6ac-a1ec78be7031.mp4  
+  2Ships_O2_Left: https://user-images.githubusercontent.com/55374976/178543344-26571480-8463-411d-b0d2-df32215db90a.mp4  
+  3Ships_C3H2: https://user-images.githubusercontent.com/55374976/178543369-7389dd68-a0b3-4d7c-85de-9cccf783e978.mp4  
+  3Ships_C3O2: https://user-images.githubusercontent.com/55374976/178543375-ce3eb21e-69fb-43f0-be2f-173905220dfb.mp4  
+  3Ships_H3O2: https://user-images.githubusercontent.com/55374976/178543377-2553abe6-446a-4931-9da2-96d7bb491f4a.mp4  
+  4Ships_C4H3O2: https://user-images.githubusercontent.com/55374976/178543378-17cee073-b5f6-4718-83d5-6448e30eb7d2.mp4  
+  4Ships_C4H4: https://user-images.githubusercontent.com/55374976/178543381-19224e71-d880-4943-8af5-6247beca6e57.mp4  
 ## Known issues:
   1. These codes sometimes could only work on 1 core of CPU, but I am not sure that parallel processing could be used in deep reinforcement learning because data in each episode can not be processed individually. However, data for each vessel may be able to be processed individually.
       Here are some tests on different computer:  
