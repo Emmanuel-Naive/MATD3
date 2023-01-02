@@ -1,6 +1,6 @@
 # MATD3
 Use Multi-agent Twin Delayed Deep Deterministic Policy Gradient to find collision free paths for ships  
-This code is modified based on the privious MADDPG algorithm:https://github.com/Emmanuel-Naive/MADDPG  
+This code is modified based on the privious MADDPG algorithm: https://github.com/Emmanuel-Naive/MADDPG  
 
 
 ## Known dependencies: 
@@ -15,17 +15,17 @@ This code is modified based on the privious MADDPG algorithm:https://github.com/
   ffmpeg: 2.7.0  
   math, os, random, time: Python built-in package
 ## Scenarios illustration
-  The illustration of scenarios could be found in:https://github.com/Emmanuel-Naive/Illustration-of-scenarios-MATD3-/blob/main/Scenario_illustration.ipynb  
+  The illustration of scenarios could be found in: https://github.com/Emmanuel-Naive/Illustration-of-scenarios-MATD3-/blob/main/Scenario_illustration.ipynb  
   **Notice:** the initial data is given based on the XoY coordinate system  
   **PS:** Explanation for scenario names  
-  &emsp;xShips: The total number of ships in the given scenario
+  &emsp;xShips: The total number of ships in the given scenario  
   &emsp;C:Crossing scenario  
   &emsp;H:Head-on scenario  
   &emsp;O:Overtaking scenario  
-  &emsp;Number after letters(C,H,O): The number of ships in the given scenario represented by the letter 
-  &emsp;Example: Scenario 3Ships_H3O2: (3Ships) In this scenario, there are 3 ships. (H3) All 3 ships are set in head-on scenarios while (O2) 2 ships are set in the overtaking scenario.  
+  &emsp;Number after letters(C,H,O): The number of ships in the given scenario represented by the letter  
+  &emsp;**Example**:&emsp;Scenario **3Ships_H3O2**:&emsp;(**3Ships**) In this scenario, there are 3 ships. (**H3**) All 3 ships are set in head-on scenarios while (**O2**) 2 ships are set in the overtaking scenario.  
 ## Some results:
-  Videos could be found in:https://github.com/Emmanuel-Naive/MATD3/issues/2  
+  Videos could be found in: https://github.com/Emmanuel-Naive/MATD3/issues/2  
   Or click the url link for wataching.  
   
   1ShipM: https://user-images.githubusercontent.com/55374976/178543309-ceeac31a-345e-4de0-ad66-9caebc4bb0ac.mp4  
