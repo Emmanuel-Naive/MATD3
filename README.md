@@ -17,9 +17,13 @@ This code is modified based on the privious MADDPG algorithm:https://github.com/
 ## Scenarios illustration
   The illustration of scenarios could be found in:https://github.com/Emmanuel-Naive/Illustration-of-scenarios-MATD3-/blob/main/Scenario_illustration.ipynb  
   **Notice:** the initial data is given based on the XoY coordinate system  
-  **PS:** C:Crossing scenarios  
-          H:Head-on scenarios  
-          O:Overtaking scenarios  
+  **PS:** Explanation for scenario names  
+  &emsp;xShips: The total number of ships in the given scenario
+  &emsp;C:Crossing scenario  
+  &emsp;H:Head-on scenario  
+  &emsp;O:Overtaking scenario  
+  &emsp;Number after letters(C,H,O): The number of ships in the given scenario represented by the letter 
+  &emsp;Example: Scenario 3Ships_H3O2: (3Ships) In this scenario, there are 3 ships. (H3) All 3 ships are set in head-on scenarios while (O2) 2 ships are set in the overtaking scenario.  
 ## Some results:
   Videos could be found in:https://github.com/Emmanuel-Naive/MATD3/issues/2  
   Or click the url link for wataching.  
