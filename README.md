@@ -16,7 +16,10 @@ This code is modified based on the privious MADDPG algorithm:https://github.com/
   math, os, random, time: Python built-in package
 ## Scenarios illustration
   The illustration of scenarios could be found in:https://github.com/Emmanuel-Naive/Illustration-of-scenarios-MATD3-/blob/main/Scenario_illustration.ipynb  
-  **Notice:** the initial data is given based on the XoY coordinate system
+  **Notice:** the initial data is given based on the XoY coordinate system  
+  **PS:** C:Crossing scenarios  
+          H:Head-on scenarios  
+          O:Overtaking scenarios  
 ## Some results:
   Videos could be found in:https://github.com/Emmanuel-Naive/MATD3/issues/2  
   Or click the url link for wataching.  
